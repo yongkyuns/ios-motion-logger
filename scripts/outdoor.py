@@ -260,8 +260,8 @@ def log_locations(samples: list[LocationSample], start: datetime) -> None:
         set_sample_time(sample.timestamp, start, index)
         point = (sample.east_m, sample.north_m, sample.up_m)
         trajectory.append(point)
-        rr.log("geo/track", rr.LineStrips3D([trajectory], colors=[[80, 210, 255]], radii=[0.08]))
-        rr.log("geo/current_fix", rr.Points3D([point], colors=[[255, 255, 255]], radii=[0.25]))
+        rr.log("geo/track", rr.LineStrips3D([trajectory], colors=[[244, 114, 132]], radii=[0.08]))
+        rr.log("geo/current_fix", rr.Points3D([point], colors=[[251, 146, 60]], radii=[0.25]))
         rr.log("plots/location", rr.Scalars([sample.east_m, sample.north_m, sample.up_m]))
         rr.log("plots/gps_accuracy_horizontal", rr.Scalars([sample.horizontal_accuracy_m]))
         rr.log("plots/gps_accuracy_vertical", rr.Scalars([sample.vertical_accuracy_m]))
@@ -372,7 +372,7 @@ def log_geo_entities(raw_location_rows: list[dict[str, str]]) -> None:
         "map/track",
         rr.GeoLineStrings(
             lat_lon=[lat_lon],
-            colors=[[45, 212, 191]],
+            colors=[[244, 114, 132]],
             radii=rr.Radius.ui_points(2.0),
         ),
         static=True,
@@ -381,7 +381,7 @@ def log_geo_entities(raw_location_rows: list[dict[str, str]]) -> None:
         "map/fixes",
         rr.GeoPoints(
             lat_lon=lat_lon,
-            colors=[[255, 255, 255] for _ in lat_lon],
+            colors=[[251, 146, 60] for _ in lat_lon],
             radii=rr.Radius.ui_points(2.5),
         ),
         static=True,

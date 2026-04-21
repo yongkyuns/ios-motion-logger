@@ -34,7 +34,7 @@ jobs:
       - name: Generate Rerun recording
         run: |
           mkdir -p artifacts
-          python scripts/view_geo_log_rerun.py \
+          python scripts/outdoor.py \
             fixtures/geo-sample.json \
             --save artifacts/geo-sample.rrd
           test -f artifacts/geo-sample.rrd

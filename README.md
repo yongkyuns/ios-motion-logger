@@ -163,7 +163,7 @@ python3 -m pip install rerun-sdk
 Run the Indoor viewer:
 
 ```bash
-python3 scripts/view_world_log_rerun.py /path/to/world-YYYY-MM-DDTHH-MM-SS.sssZ.json --spawn
+python3 scripts/indoor.py /path/to/world-YYYY-MM-DDTHH-MM-SS.sssZ.json --spawn
 ```
 
 Useful notes:
@@ -174,7 +174,7 @@ Useful notes:
 - You can save a headless recording instead of spawning the UI:
 
 ```bash
-python3 scripts/view_world_log_rerun.py /path/to/world-YYYY-MM-DDTHH-MM-SS.sssZ.json --save /tmp/world.rrd
+python3 scripts/indoor.py /path/to/world-YYYY-MM-DDTHH-MM-SS.sssZ.json --save /tmp/world.rrd
 ```
 
 ### Outdoor in Rerun
@@ -182,7 +182,7 @@ python3 scripts/view_world_log_rerun.py /path/to/world-YYYY-MM-DDTHH-MM-SS.sssZ.
 Run the Outdoor viewer:
 
 ```bash
-python3 scripts/view_geo_log_rerun.py /path/to/geo-YYYY-MM-DDTHH-MM-SS.sssZ.json --spawn
+python3 scripts/outdoor.py /path/to/geo-YYYY-MM-DDTHH-MM-SS.sssZ.json --spawn
 ```
 
 Useful notes:
@@ -194,7 +194,7 @@ Useful notes:
 - You can save a headless recording instead of spawning the UI:
 
 ```bash
-python3 scripts/view_geo_log_rerun.py /path/to/geo-YYYY-MM-DDTHH-MM-SS.sssZ.json --save /tmp/geo.rrd
+python3 scripts/outdoor.py /path/to/geo-YYYY-MM-DDTHH-MM-SS.sssZ.json --save /tmp/geo.rrd
 ```
 
 ## 🔐 Environment Variables
