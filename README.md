@@ -10,7 +10,13 @@
 This repo gives you two demos:
 
 - 🏠 `Indoor`: ARKit-based tracking, trajectory, and semantic mapping
+  <p align="center">
+    <img src="docs/images/indoor-example.png" alt="Indoor mapping example" width="504" />
+  </p>
 - 🌤️ `Outdoor`: Core Location + Core Motion logging for GPS, heading, attitude, accelerometer, gyroscope, magnetometer, and barometer
+  <p align="center">
+    <img src="docs/images/outdoor-example.png" alt="Outdoor logging example" width="504" />
+  </p>
 
 It also includes:
 
@@ -78,10 +84,6 @@ Use `Indoor` when you want:
 - semantic mapping / mesh visualization
 - indoor AR logging workflows
 
-<p align="center">
-  <img src="docs/images/indoor-example.png" alt="Indoor mapping example" width="504" />
-</p>
-
 Typical flow:
 
 1. Open `Indoor`
@@ -98,10 +100,6 @@ Use `Outdoor` when you want:
 - device attitude
 - raw IMU streams
 - barometer / relative altitude
-
-<p align="center">
-  <img src="docs/images/outdoor-example.png" alt="Outdoor logging example" width="504" />
-</p>
 
 If the barometer says it needs permission, enable:
 
