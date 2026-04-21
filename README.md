@@ -11,6 +11,10 @@
   <img src="docs/images/indoor-example.png" alt="Indoor mapping example" width="504" />
 </p>
 
+<p align="center">
+  <img src="docs/images/outdoor-example.png" alt="Outdoor logging example" width="504" />
+</p>
+
 This repo gives you two demos:
 
 - 🏠 `Indoor`: ARKit-based tracking, trajectory, and semantic mapping
