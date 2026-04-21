@@ -9,11 +9,11 @@
 
 This repo gives you two demos:
 
-- 🏠 `Indoor`: ARKit-based tracking, trajectory, and semantic mapping
+- 🏠 `Indoor`: ARKit-based tracking with a live semantic camera view, a followable 3D map, saved map points, and semantic mesh export on devices that support scene reconstruction
   <p align="center">
     <img src="docs/images/indoor-example.png" alt="Indoor mapping example" width="504" />
   </p>
-- 🌤️ `Outdoor`: Core Location + Core Motion logging for GPS, heading, attitude, accelerometer, gyroscope, magnetometer, and barometer
+- 🌤️ `Outdoor`: Core Location + Core Motion logging with a live map plus switchable charts for GPS, heading, attitude, accelerometer, gyroscope, magnetometer, and barometer
   <p align="center">
     <img src="docs/images/outdoor-example.png" alt="Outdoor logging example" width="504" />
   </p>
@@ -21,14 +21,13 @@ This repo gives you two demos:
 It also includes:
 
 - 📦 one-tap export of session logs as a single JSON package
-- 🗺️ Python tools to visualize exported logs in Rerun or on a Mapbox map
-- 🤖 CI that builds the app and validates the Rerun pipeline
+- 🗺️ Python tools to visualize exported logs in Rerun
 
 ## ✨ What You Can Do
 
 - Record live sensor data on an iPhone
 - Export sessions for offline debugging and analysis
-- Visualize GPS tracks, IMU streams, heading, and barometer data in Rerun
+- Visualize Indoor AR logs and Outdoor GPS/IMU logs in Rerun
 - Inspect logs without keeping any personal Apple team IDs or tokens in the repo
 
 ## ✅ Requirements
@@ -81,7 +80,8 @@ This public repo intentionally does not include a personal team ID or personal b
 Use `Indoor` when you want:
 
 - ARKit trajectory tracking
-- semantic mapping / mesh visualization
+- saved map points
+- semantic mapping / mesh visualization on devices that support scene reconstruction
 - indoor AR logging workflows
 
 Typical flow:
@@ -100,6 +100,7 @@ Use `Outdoor` when you want:
 - device attitude
 - raw IMU streams
 - barometer / relative altitude
+- a live route map and switchable streaming charts
 
 If the barometer says it needs permission, enable:
 
@@ -109,6 +110,14 @@ Then make sure:
 
 - `Fitness Tracking` is on
 - this app is allowed to access Motion & Fitness
+
+Typical flow:
+
+1. Open `Outdoor`
+2. Grant location and Motion & Fitness access if prompted
+3. Walk or move with the phone while switching between map and signal views
+4. Tap `Export Logs`
+5. Open the exported `geo-*.json` file in the Outdoor Rerun viewer
 
 ## 📂 Export Format
 
@@ -154,17 +163,18 @@ python3 -m pip install rerun-sdk
 Run the Indoor viewer:
 
 ```bash
-python3 scripts/view_world_log_rerun.py ~/Downloads/world-YYYY-MM-DDTHH-MM-SS.sssZ.json --spawn
+python3 scripts/view_world_log_rerun.py /path/to/world-YYYY-MM-DDTHH-MM-SS.sssZ.json --spawn
 ```
 
 Useful notes:
 
-- The viewer shows device trajectory, saved map points, semantic mesh, and status/event logs
+- The viewer shows device trajectory, saved map points, semantic mesh, and event logs
 - `world_semantic_mesh.jsonl` is written as a final export-time snapshot to keep exports smaller
+- This viewer does not use Mapbox
 - You can save a headless recording instead of spawning the UI:
 
 ```bash
-python3 scripts/view_world_log_rerun.py ~/Downloads/world-YYYY-MM-DDTHH-MM-SS.sssZ.json --save /tmp/world.rrd
+python3 scripts/view_world_log_rerun.py /path/to/world-YYYY-MM-DDTHH-MM-SS.sssZ.json --save /tmp/world.rrd
 ```
 
 ### Outdoor in Rerun
@@ -172,67 +182,36 @@ python3 scripts/view_world_log_rerun.py ~/Downloads/world-YYYY-MM-DDTHH-MM-SS.ss
 Run the Outdoor viewer:
 
 ```bash
-python3 scripts/view_geo_log_rerun.py ~/Downloads/geo-YYYY-MM-DDTHH-MM-SS.sssZ.json --spawn
+python3 scripts/view_geo_log_rerun.py /path/to/geo-YYYY-MM-DDTHH-MM-SS.sssZ.json --spawn
 ```
 
 Useful notes:
 
 - The viewer includes map, position, heading, motion, raw IMU, barometer, and logs
 - If barometer samples are present, the `Barometer` tab opens by default
+- The embedded map works without a token and falls back to OpenStreetMap
+- If `MAPBOX_ACCESS_TOKEN` is set before launch, the embedded map switches to the dark Mapbox basemap
 - You can save a headless recording instead of spawning the UI:
 
 ```bash
-python3 scripts/view_geo_log_rerun.py ~/Downloads/geo-YYYY-MM-DDTHH-MM-SS.sssZ.json --save /tmp/geo.rrd
-```
-
-### Option B: Mapbox HTML
-
-This script is for `Outdoor` GPS logs.
-
-`MAPBOX_ACCESS_TOKEN` is optional. If you set it, you get a better-looking Mapbox basemap. If you leave it unset, the Rerun viewer still works and falls back to OpenStreetMap.
-
-Set your token if you want the Mapbox-backed map styles:
-
-```bash
-export MAPBOX_ACCESS_TOKEN=your_mapbox_token
-```
-
-Then generate the HTML map:
-
-```bash
-python3 scripts/view_geo_log_mapbox.py ~/Downloads/geo-YYYY-MM-DDTHH-MM-SS.sssZ.json
+python3 scripts/view_geo_log_rerun.py /path/to/geo-YYYY-MM-DDTHH-MM-SS.sssZ.json --save /tmp/geo.rrd
 ```
 
 ## 🔐 Environment Variables
 
 No personal tokens are stored in this repo.
 
-`MAPBOX_ACCESS_TOKEN` is optional. Use it only if you want the Mapbox-backed visualizations instead of the default fallback map.
+`MAPBOX_ACCESS_TOKEN` is optional for the Outdoor Rerun viewer.
 
-For local Mapbox-backed visualizations, use:
+If you want Mapbox-backed maps, use:
 
 ```bash
 export MAPBOX_ACCESS_TOKEN=your_mapbox_token
 ```
 
-The Rerun script forwards `MAPBOX_ACCESS_TOKEN` internally to the Rerun viewer when needed.
+The Outdoor Rerun script forwards `MAPBOX_ACCESS_TOKEN` internally to the Rerun viewer when needed.
 
 See [.env.example](.env.example) for the expected variable name.
-
-## 🤖 CI Pipeline
-
-The GitHub Actions workflow does two concrete checks on every push and pull request:
-
-1. Builds the iOS app with unsigned device-compatible settings
-2. Runs the Geo Rerun script headlessly against a checked-in sample export and saves a `.rrd` artifact
-
-The sample input used by CI lives at:
-
-- [fixtures/geo-sample.json](fixtures/geo-sample.json)
-
-The workflow file is:
-
-- [.github/workflows/ci.yml](.github/workflows/ci.yml)
 
 ## 🧼 Privacy Notes
 
