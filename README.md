@@ -85,3 +85,7 @@ This public repo intentionally excludes:
 - local export artifacts and editor metadata
 
 See [.env.example](.env.example) for the expected environment-variable names.
+
+## License
+
+MIT. See [LICENSE](LICENSE).
