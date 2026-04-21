@@ -1,0 +1,41 @@
+{
+  "session_directory": "geo-sample-session",
+  "files": [
+    {
+      "name": "geo_location.csv",
+      "content": "timestamp,latitude,longitude,horizontal_accuracy_m,vertical_accuracy_m,altitude_m,speed_mps,course_deg\n2026-04-21T16:55:50.000Z,43.4812271,-79.6937751,2.9,3.0,154.10,0.0,-1\n2026-04-21T16:55:51.000Z,43.4812272,-79.6937750,2.8,3.0,154.15,0.1,90\n2026-04-21T16:55:52.000Z,43.4812274,-79.6937748,2.7,3.1,154.22,0.2,95\n"
+    },
+    {
+      "name": "geo_heading.csv",
+      "content": "timestamp,magnetic_heading_deg,true_heading_deg,heading_accuracy_deg,x,y,z\n2026-04-21T16:55:50.000Z,136.5,126.5,20.0,2.0,0.1,-48.0\n2026-04-21T16:55:51.000Z,136.6,126.6,19.8,2.1,0.0,-47.8\n2026-04-21T16:55:52.000Z,136.7,126.7,19.6,2.2,-0.1,-47.6\n"
+    },
+    {
+      "name": "geo_device_motion.csv",
+      "content": "timestamp,roll_deg,pitch_deg,yaw_deg,gravity_x,gravity_y,gravity_z,user_accel_x,user_accel_y,user_accel_z,rotation_x,rotation_y,rotation_z,mag_field_x,mag_field_y,mag_field_z,mag_accuracy\n2026-04-21T16:55:50.000Z,-1.1,1.2,143.4,0.01,-0.02,-1.00,0.00,0.01,0.00,0.00,0.00,0.00,24.0,2.0,-48.0,high\n2026-04-21T16:55:51.000Z,-1.2,1.3,143.5,0.01,-0.02,-1.00,0.01,0.00,0.01,0.01,0.00,-0.01,24.1,2.1,-47.8,high\n2026-04-21T16:55:52.000Z,-1.1,1.2,143.6,0.01,-0.02,-1.00,0.00,-0.01,0.01,0.00,-0.01,0.00,24.2,2.2,-47.6,high\n"
+    },
+    {
+      "name": "geo_accelerometer.csv",
+      "content": "timestamp,ax_g,ay_g,az_g\n2026-04-21T16:55:50.000Z,0.00,0.01,0.99\n2026-04-21T16:55:51.000Z,0.01,0.00,0.98\n2026-04-21T16:55:52.000Z,0.00,-0.01,1.00\n"
+    },
+    {
+      "name": "geo_gyro.csv",
+      "content": "timestamp,gx_rps,gy_rps,gz_rps\n2026-04-21T16:55:50.000Z,0.00,0.00,0.00\n2026-04-21T16:55:51.000Z,0.01,0.00,-0.01\n2026-04-21T16:55:52.000Z,0.00,-0.01,0.00\n"
+    },
+    {
+      "name": "geo_magnetometer.csv",
+      "content": "timestamp,mx_uT,my_uT,mz_uT\n2026-04-21T16:55:50.000Z,24.0,2.0,-48.0\n2026-04-21T16:55:51.000Z,24.1,2.1,-47.8\n2026-04-21T16:55:52.000Z,24.2,2.2,-47.6\n"
+    },
+    {
+      "name": "geo_barometer.csv",
+      "content": "timestamp,relative_altitude_m,pressure_kpa\n2026-04-21T16:55:50.000Z,0.0000,100.0679\n2026-04-21T16:55:51.000Z,0.0185,100.0677\n2026-04-21T16:55:52.000Z,0.0502,100.0673\n"
+    },
+    {
+      "name": "geo_status.jsonl",
+      "content": "{\"timestamp\":\"2026-04-21T16:55:50.000Z\",\"sensor_state\":\"Streaming sensors\",\"position\":\"43.481227, -79.693775\",\"barometer\":\"rel 0.00 m | pressure 100.07 kPa\",\"barometer_authorization\":\"authorized\",\"heading_deg\":126.5,\"relative_altitude_m\":0.0,\"pressure_kpa\":100.0679}\n{\"timestamp\":\"2026-04-21T16:55:51.000Z\",\"sensor_state\":\"Streaming sensors\",\"position\":\"43.481227, -79.693775\",\"barometer\":\"rel 0.02 m | pressure 100.07 kPa\",\"barometer_authorization\":\"authorized\",\"heading_deg\":126.6,\"relative_altitude_m\":0.0185,\"pressure_kpa\":100.0677}\n"
+    },
+    {
+      "name": "geo_events.jsonl",
+      "content": "{\"timestamp\":\"2026-04-21T16:55:49.900Z\",\"type\":\"start_requested\",\"barometer_available\":true,\"barometer_authorization\":\"authorized\",\"motion_activity_authorization\":\"authorized\"}\n{\"timestamp\":\"2026-04-21T16:55:49.950Z\",\"type\":\"barometer_started\",\"authorization\":\"authorized\"}\n"
+    }
+  ]
+}

@@ -1,0 +1,46 @@
+name: CI
+
+on:
+  push:
+    branches:
+      - main
+  pull_request:
+
+jobs:
+  build-and-visualize:
+    runs-on: macos-15
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+
+      - name: Install Rerun SDK
+        run: python -m pip install --upgrade pip rerun-sdk
+
+      - name: Build iOS app
+        run: |
+          xcodebuild \
+            -project MonocularSLAMDemo.xcodeproj \
+            -scheme MonocularSLAMDemo \
+            -destination 'generic/platform=iOS' \
+            build \
+            CODE_SIGNING_ALLOWED=NO
+
+      - name: Generate Rerun recording
+        run: |
+          mkdir -p artifacts
+          python scripts/view_geo_log_rerun.py \
+            fixtures/geo-sample.json \
+            --save artifacts/geo-sample.rrd
+          test -f artifacts/geo-sample.rrd
+
+      - name: Upload Rerun artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: geo-sample-rrd
+          path: artifacts/geo-sample.rrd
