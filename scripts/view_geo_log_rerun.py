@@ -84,7 +84,7 @@ def parse_args() -> argparse.Namespace:
     parser.add_argument(
         "input",
         type=Path,
-        help="Path to an exported geo-*.json package or a session directory containing geo_*.csv files.",
+        help="Path to an exported geo-*.json package or a session directory containing the Outdoor log files.",
     )
     parser.add_argument(
         "--save",
@@ -98,7 +98,7 @@ def parse_args() -> argparse.Namespace:
     )
     parser.add_argument(
         "--mapbox-token",
-        help="Optional Mapbox token for the embedded Rerun MapView. If omitted, RERUN_MAPBOX_ACCESS_TOKEN or MAPBOX_ACCESS_TOKEN is used.",
+        help="Optional Mapbox token for the embedded Rerun MapView. If omitted, MAPBOX_ACCESS_TOKEN is used.",
     )
     return parser.parse_args()
 
@@ -454,17 +454,17 @@ def send_blueprint(use_mapbox: bool, has_barometer: bool) -> None:
 def main() -> None:
     args = parse_args()
     files, session_name = read_export(args.input)
-    raw_location_rows = list(csv.DictReader(io.StringIO(files.get("geo_location.csv", ""))))
+    raw_location_rows = list(csv.DictReader(io.StringIO(files.get("location.csv", ""))))
 
-    location_samples = parse_location_csv(files.get("geo_location.csv", ""))
-    heading_samples = parse_heading_csv(files.get("geo_heading.csv", ""))
-    motion_samples = parse_motion_csv(files.get("geo_device_motion.csv", ""))
-    accelerometer_samples = parse_triple_axis_csv(files.get("geo_accelerometer.csv", ""), "ax_g", "ay_g", "az_g")
-    gyro_samples = parse_triple_axis_csv(files.get("geo_gyro.csv", ""), "gx_rps", "gy_rps", "gz_rps")
-    magnetometer_samples = parse_triple_axis_csv(files.get("geo_magnetometer.csv", ""), "mx_uT", "my_uT", "mz_uT")
-    barometer_samples = parse_barometer_csv(files.get("geo_barometer.csv", ""))
-    status_events = parse_jsonl(files.get("geo_status.jsonl", ""))
-    event_logs = parse_jsonl(files.get("geo_events.jsonl", ""))
+    location_samples = parse_location_csv(files.get("location.csv", ""))
+    heading_samples = parse_heading_csv(files.get("heading.csv", ""))
+    motion_samples = parse_motion_csv(files.get("device_motion.csv", ""))
+    accelerometer_samples = parse_triple_axis_csv(files.get("accelerometer.csv", ""), "ax_g", "ay_g", "az_g")
+    gyro_samples = parse_triple_axis_csv(files.get("gyro.csv", ""), "gx_rps", "gy_rps", "gz_rps")
+    magnetometer_samples = parse_triple_axis_csv(files.get("magnetometer.csv", ""), "mx_uT", "my_uT", "mz_uT")
+    barometer_samples = parse_barometer_csv(files.get("barometer.csv", ""))
+    status_events = parse_jsonl(files.get("status.jsonl", ""))
+    event_logs = parse_jsonl(files.get("events.jsonl", ""))
 
     candidate_timestamps = [
         samples[0].timestamp
@@ -486,7 +486,7 @@ def main() -> None:
         raise ValueError("No Geo samples found in export")
 
     start = min(parse_timestamp(timestamp) for timestamp in candidate_timestamps)
-    mapbox_token = args.mapbox_token or os.environ.get("RERUN_MAPBOX_ACCESS_TOKEN") or os.environ.get("MAPBOX_ACCESS_TOKEN")
+    mapbox_token = args.mapbox_token or os.environ.get("MAPBOX_ACCESS_TOKEN")
     if mapbox_token:
         os.environ["RERUN_MAPBOX_ACCESS_TOKEN"] = mapbox_token
 

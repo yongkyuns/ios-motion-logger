@@ -19,7 +19,7 @@ def parse_args() -> argparse.Namespace:
     parser.add_argument(
         "input",
         type=Path,
-        help="Path to an exported geo-*.json package or a session directory containing geo_location.csv.",
+        help="Path to an exported geo-*.json package or a session directory containing location.csv.",
     )
     parser.add_argument(
         "--token",
@@ -38,16 +38,16 @@ def read_location_csv(input_path: Path) -> tuple[list[dict[str, str]], str]:
 
     if input_path.is_dir():
         session_name = input_path.name
-        location_csv = input_path.joinpath("geo_location.csv").read_text(encoding="utf-8")
+        location_csv = input_path.joinpath("location.csv").read_text(encoding="utf-8")
     else:
         payload = json.loads(input_path.read_text(encoding="utf-8"))
         session_name = payload.get("session_directory", input_path.stem)
         files = {entry["name"]: entry["content"] for entry in payload.get("files", [])}
-        location_csv = files["geo_location.csv"]
+        location_csv = files["location.csv"]
 
     rows = list(csv.DictReader(io.StringIO(location_csv)))
     if not rows:
-        raise ValueError("No location rows found in geo_location.csv")
+        raise ValueError("No location rows found in location.csv")
 
     return rows, session_name
 
@@ -160,7 +160,7 @@ def default_output_path(input_path: Path, session_name: str) -> Path:
 
 def main() -> None:
     args = parse_args()
-    token = args.token or os.environ.get("MAPBOX_ACCESS_TOKEN") or os.environ.get("RERUN_MAPBOX_ACCESS_TOKEN")
+    token = args.token or os.environ.get("MAPBOX_ACCESS_TOKEN")
     if not token:
         raise SystemExit("Missing Mapbox token. Pass --token or set MAPBOX_ACCESS_TOKEN.")
     rows, session_name = read_location_csv(args.input)

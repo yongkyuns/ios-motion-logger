@@ -7,3 +7,11 @@ func makeLogTimestamp(_ date: Date = Date()) -> String {
         formatOptions: [.withInternetDateTime, .withFractionalSeconds]
     )
 }
+
+func estimateWallClockDate(
+    fromSystemUptime sensorTime: TimeInterval,
+    now: Date = Date(),
+    currentSystemUptime: TimeInterval = ProcessInfo.processInfo.systemUptime
+) -> Date {
+    now.addingTimeInterval(sensorTime - currentSystemUptime)
+}

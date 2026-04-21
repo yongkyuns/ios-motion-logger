@@ -10,6 +10,7 @@ actor SessionLogWriter {
     nonisolated let fileURLs: [URL]
 
     private var handlesByName: [String: FileHandle] = [:]
+    private let headersByName: [String: String]
 
     init(prefix: String, files: [SessionLogFileDefinition]) {
         let root = Self.documentsDirectory()
@@ -32,6 +33,7 @@ actor SessionLogWriter {
 
         self.sessionDirectoryURL = sessionDirectoryURL
         self.fileURLs = resolvedURLs
+        self.headersByName = Dictionary(uniqueKeysWithValues: files.map { ($0.name, $0.header ?? "") })
 
         for (index, file) in files.enumerated() {
             if let handle = try? FileHandle(forWritingTo: resolvedURLs[index]) {
@@ -48,6 +50,43 @@ actor SessionLogWriter {
         do {
             _ = try handle.seekToEnd()
             try handle.write(contentsOf: data)
+        } catch {
+            return
+        }
+    }
+
+    func append(lines: [String], to fileName: String) {
+        guard !lines.isEmpty else { return }
+        guard let handle = handlesByName[fileName] else { return }
+        guard let data = (lines.joined(separator: "\n") + "\n").data(using: .utf8) else { return }
+
+        do {
+            _ = try handle.seekToEnd()
+            try handle.write(contentsOf: data)
+        } catch {
+            return
+        }
+    }
+
+    func overwrite(lines: [String], to fileName: String) {
+        guard let url = fileURLs.first(where: { $0.lastPathComponent == fileName }) else { return }
+        let header = headersByName[fileName] ?? ""
+
+        var output = ""
+        if !header.isEmpty {
+            output += header + "\n"
+        }
+        if !lines.isEmpty {
+            output += lines.joined(separator: "\n") + "\n"
+        }
+
+        do {
+            try output.data(using: .utf8)?.write(to: url, options: .atomic)
+            if let handle = try? FileHandle(forWritingTo: url) {
+                try? handlesByName[fileName]?.close()
+                handlesByName[fileName] = handle
+                _ = try? handle.seekToEnd()
+            }
         } catch {
             return
         }

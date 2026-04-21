@@ -29,6 +29,28 @@ class WorldPoseSample:
     semantic_chunk_count: int
 
 
+@dataclass
+class WorldMapPointSample:
+    timestamp: str
+    uptime_seconds: float
+    position: tuple[float, float, float]
+
+
+@dataclass
+class SemanticMeshGroupSample:
+    semantic_class: str
+    vertices: list[tuple[float, float, float]]
+
+
+@dataclass
+class SemanticMeshEvent:
+    timestamp: str
+    uptime_seconds: float
+    event_type: str
+    chunk_id: str
+    groups: list[SemanticMeshGroupSample]
+
+
 def parse_args() -> argparse.Namespace:
     parser = argparse.ArgumentParser(
         description="Visualize exported ARKit world-tracking logs with Rerun."
@@ -51,23 +73,37 @@ def parse_args() -> argparse.Namespace:
     return parser.parse_args()
 
 
-def read_export(input_path: Path) -> tuple[list[WorldPoseSample], list[dict[str, Any]], str]:
+def read_export(
+    input_path: Path,
+) -> tuple[list[WorldPoseSample], list[WorldMapPointSample], list[SemanticMeshEvent], list[dict[str, Any]], str]:
     input_path = input_path.expanduser().resolve()
 
     if input_path.is_dir():
         session_name = input_path.name
         pose_csv = input_path.joinpath("world_pose.csv").read_text(encoding="utf-8")
+        map_points_csv = read_optional_file(input_path.joinpath("world_map_points.csv"))
+        semantic_mesh_jsonl = read_optional_file(input_path.joinpath("world_semantic_mesh.jsonl"))
         event_jsonl = input_path.joinpath("world_events.jsonl").read_text(encoding="utf-8")
     else:
         payload = json.loads(input_path.read_text(encoding="utf-8"))
         session_name = payload.get("session_directory", input_path.stem)
         files = {entry["name"]: entry["content"] for entry in payload.get("files", [])}
         pose_csv = files["world_pose.csv"]
+        map_points_csv = files.get("world_map_points.csv", "")
+        semantic_mesh_jsonl = files.get("world_semantic_mesh.jsonl", "")
         event_jsonl = files.get("world_events.jsonl", "")
 
     poses = parse_pose_csv(pose_csv)
+    map_points = parse_map_points_csv(map_points_csv)
+    semantic_mesh_events = parse_semantic_mesh_jsonl(semantic_mesh_jsonl)
     events = parse_jsonl(event_jsonl)
-    return poses, events, session_name
+    return poses, map_points, semantic_mesh_events, events, session_name
+
+
+def read_optional_file(path: Path) -> str:
+    if not path.exists():
+        return ""
+    return path.read_text(encoding="utf-8")
 
 
 def parse_pose_csv(content: str) -> list[WorldPoseSample]:
@@ -105,6 +141,60 @@ def parse_jsonl(content: str) -> list[dict[str, Any]]:
         if not line:
             continue
         events.append(json.loads(line))
+
+    return events
+
+
+def parse_map_points_csv(content: str) -> list[WorldMapPointSample]:
+    if not content.strip():
+        return []
+
+    reader = csv.DictReader(io.StringIO(content))
+    samples: list[WorldMapPointSample] = []
+
+    for row in reader:
+        samples.append(
+            WorldMapPointSample(
+                timestamp=row["timestamp"],
+                uptime_seconds=float(row["uptime_seconds"]),
+                position=(float(row["x"]), float(row["y"]), float(row["z"])),
+            )
+        )
+
+    return samples
+
+
+def parse_semantic_mesh_jsonl(content: str) -> list[SemanticMeshEvent]:
+    if not content.strip():
+        return []
+
+    rows = parse_jsonl(content)
+    events: list[SemanticMeshEvent] = []
+
+    for row in rows:
+        groups: list[SemanticMeshGroupSample] = []
+        for group in row.get("groups", []):
+            vertices = [
+                (float(vertex[0]), float(vertex[1]), float(vertex[2]))
+                for vertex in group.get("vertices", [])
+                if len(vertex) == 3
+            ]
+            groups.append(
+                SemanticMeshGroupSample(
+                    semantic_class=str(group.get("semantic_class", "none")),
+                    vertices=vertices,
+                )
+            )
+
+        events.append(
+            SemanticMeshEvent(
+                timestamp=str(row["timestamp"]),
+                uptime_seconds=float(row["uptime_seconds"]),
+                event_type=str(row["type"]),
+                chunk_id=str(row["chunk_id"]),
+                groups=groups,
+            )
+        )
 
     return events
 
@@ -155,6 +245,56 @@ def log_events(events: list[dict[str, Any]], first_uptime_seconds: float) -> Non
         rr.log("events/log", rr.TextLog(message))
 
 
+def semantic_color_rgb(semantic_class: str) -> list[int]:
+    return {
+        "floor": [52, 199, 89],
+        "wall": [10, 132, 255],
+        "ceiling": [255, 149, 0],
+        "table": [175, 82, 222],
+        "seat": [255, 45, 85],
+        "window": [90, 200, 250],
+        "door": [162, 132, 94],
+        "none": [142, 142, 147],
+    }.get(semantic_class, [142, 142, 147])
+
+
+def log_map_points(map_points: list[WorldMapPointSample]) -> None:
+    cumulative_points: list[tuple[float, float, float]] = []
+
+    for sample in map_points:
+        cumulative_points.append(sample.position)
+        rr.set_time("uptime", duration=sample.uptime_seconds)
+        rr.log(
+            "world/map_points",
+            rr.Points3D(cumulative_points, colors=[[200, 200, 200]], radii=[0.008]),
+        )
+
+
+def log_semantic_mesh_events(events: list[SemanticMeshEvent]) -> None:
+    for event in events:
+        rr.set_time("uptime", duration=event.uptime_seconds)
+        chunk_path = f"world/semantic_mesh/{event.chunk_id}"
+
+        if event.event_type == "remove_chunk":
+            rr.log(chunk_path, rr.Clear(recursive=True))
+            continue
+
+        rr.log(chunk_path, rr.Clear(recursive=True))
+
+        for group in event.groups:
+            if not group.vertices:
+                continue
+
+            rr.log(
+                f"{chunk_path}/{group.semantic_class}",
+                rr.Points3D(
+                    group.vertices,
+                    colors=[semantic_color_rgb(group.semantic_class)],
+                    radii=[0.004],
+                ),
+            )
+
+
 def log_poses(poses: list[WorldPoseSample]) -> None:
     trajectory: list[tuple[float, float, float]] = []
     last_tracking_state: str | None = None
@@ -200,7 +340,7 @@ def log_poses(poses: list[WorldPoseSample]) -> None:
 
 def main() -> None:
     args = parse_args()
-    poses, events, session_name = read_export(args.input)
+    poses, map_points, semantic_mesh_events, events, session_name = read_export(args.input)
 
     rr.init(f"arkit_world_log_{session_name}", spawn=args.spawn)
     if args.save:
@@ -208,9 +348,16 @@ def main() -> None:
 
     log_static_scene()
     log_events(events, poses[0].uptime_seconds)
+    log_map_points(map_points)
+    log_semantic_mesh_events(semantic_mesh_events)
     log_poses(poses)
 
-    print(f"Loaded {len(poses)} pose samples and {len(events)} events from {session_name}")
+    print(
+        f"Loaded {len(poses)} pose samples, "
+        f"{len(map_points)} map points, "
+        f"{len(semantic_mesh_events)} semantic mesh events, "
+        f"and {len(events)} events from {session_name}"
+    )
     if args.save:
         print(f"Saved Rerun recording to {args.save}")
 

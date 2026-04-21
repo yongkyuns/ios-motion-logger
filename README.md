@@ -7,6 +7,8 @@
 
 📱 A simple iPhone app for logging motion, location, and AR sensor data, then exporting it for analysis.
 
+![Indoor mapping example](docs/images/indoor-example.png)
+
 This repo gives you two demos:
 
 - 🏠 `Indoor`: ARKit-based tracking, trajectory, and semantic mapping
@@ -78,6 +80,13 @@ Use `Indoor` when you want:
 - semantic mapping / mesh visualization
 - indoor AR logging workflows
 
+Typical flow:
+
+1. Open `Indoor`
+2. Move the phone slowly through the scene
+3. Tap `Export Logs`
+4. Open the exported `world-*.json` file in the Indoor Rerun viewer
+
 ### Outdoor
 
 Use `Outdoor` when you want:
@@ -99,17 +108,26 @@ Then make sure:
 
 ## 📂 Export Format
 
+`Indoor` exports a single JSON package that contains embedded files such as:
+
+- `world_pose.csv`
+- `world_map_points.csv`
+- `world_semantic_mesh.jsonl`
+- `world_events.jsonl`
+
+`world_semantic_mesh.jsonl` is written as a final export-time snapshot rather than a continuous mesh stream, which keeps Indoor exports much smaller.
+
 `Outdoor` exports a single JSON package that contains embedded CSV and JSONL files such as:
 
-- `geo_location.csv`
-- `geo_heading.csv`
-- `geo_device_motion.csv`
-- `geo_accelerometer.csv`
-- `geo_gyro.csv`
-- `geo_magnetometer.csv`
-- `geo_barometer.csv`
-- `geo_status.jsonl`
-- `geo_events.jsonl`
+- `location.csv`
+- `heading.csv`
+- `device_motion.csv`
+- `accelerometer.csv`
+- `gyro.csv`
+- `magnetometer.csv`
+- `barometer.csv`
+- `status.jsonl`
+- `events.jsonl`
 
 The app first writes raw files to:
 
@@ -121,15 +139,33 @@ Then it packages them into one shareable `.json` export.
 
 ## 📊 Visualize Logs Step by Step
 
-### Option A: Rerun
-
-Install the Python dependency:
+Install the Python dependency first:
 
 ```bash
 python3 -m pip install rerun-sdk
 ```
 
-Run the Geo viewer:
+### Indoor in Rerun
+
+Run the Indoor viewer:
+
+```bash
+python3 scripts/view_world_log_rerun.py ~/Downloads/world-YYYY-MM-DDTHH-MM-SS.sssZ.json --spawn
+```
+
+Useful notes:
+
+- The viewer shows device trajectory, saved map points, semantic mesh, and status/event logs
+- `world_semantic_mesh.jsonl` is written as a final export-time snapshot to keep exports smaller
+- You can save a headless recording instead of spawning the UI:
+
+```bash
+python3 scripts/view_world_log_rerun.py ~/Downloads/world-YYYY-MM-DDTHH-MM-SS.sssZ.json --save /tmp/world.rrd
+```
+
+### Outdoor in Rerun
+
+Run the Outdoor viewer:
 
 ```bash
 python3 scripts/view_geo_log_rerun.py ~/Downloads/geo-YYYY-MM-DDTHH-MM-SS.sssZ.json --spawn
@@ -147,11 +183,14 @@ python3 scripts/view_geo_log_rerun.py ~/Downloads/geo-YYYY-MM-DDTHH-MM-SS.sssZ.j
 
 ### Option B: Mapbox HTML
 
-Set your token:
+This script is for `Outdoor` GPS logs.
+
+`MAPBOX_ACCESS_TOKEN` is optional. If you set it, you get a better-looking Mapbox basemap. If you leave it unset, the Rerun viewer still works and falls back to OpenStreetMap.
+
+Set your token if you want the Mapbox-backed map styles:
 
 ```bash
 export MAPBOX_ACCESS_TOKEN=your_mapbox_token
-export RERUN_MAPBOX_ACCESS_TOKEN="$MAPBOX_ACCESS_TOKEN"
 ```
 
 Then generate the HTML map:
@@ -164,14 +203,17 @@ python3 scripts/view_geo_log_mapbox.py ~/Downloads/geo-YYYY-MM-DDTHH-MM-SS.sssZ.
 
 No personal tokens are stored in this repo.
 
+`MAPBOX_ACCESS_TOKEN` is optional. Use it only if you want the Mapbox-backed visualizations instead of the default fallback map.
+
 For local Mapbox-backed visualizations, use:
 
 ```bash
 export MAPBOX_ACCESS_TOKEN=your_mapbox_token
-export RERUN_MAPBOX_ACCESS_TOKEN="$MAPBOX_ACCESS_TOKEN"
 ```
 
-See [.env.example](.env.example) for the expected variable names.
+The Rerun script forwards `MAPBOX_ACCESS_TOKEN` internally to the Rerun viewer when needed.
+
+See [.env.example](.env.example) for the expected variable name.
 
 ## 🤖 CI Pipeline
 

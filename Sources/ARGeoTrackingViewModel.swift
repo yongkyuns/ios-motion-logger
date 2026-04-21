@@ -12,15 +12,15 @@ struct GeoSignalSample: Identifiable {
 
 @MainActor
 final class ARGeoTrackingViewModel: NSObject, ObservableObject {
-    private let locationLogFileName = "geo_location.csv"
-    private let headingLogFileName = "geo_heading.csv"
-    private let motionLogFileName = "geo_device_motion.csv"
-    private let accelerometerLogFileName = "geo_accelerometer.csv"
-    private let gyroLogFileName = "geo_gyro.csv"
-    private let magnetometerLogFileName = "geo_magnetometer.csv"
-    private let barometerLogFileName = "geo_barometer.csv"
-    private let statusLogFileName = "geo_status.jsonl"
-    private let eventLogFileName = "geo_events.jsonl"
+    private let locationLogFileName = "location.csv"
+    private let headingLogFileName = "heading.csv"
+    private let motionLogFileName = "device_motion.csv"
+    private let accelerometerLogFileName = "accelerometer.csv"
+    private let gyroLogFileName = "gyro.csv"
+    private let magnetometerLogFileName = "magnetometer.csv"
+    private let barometerLogFileName = "barometer.csv"
+    private let statusLogFileName = "status.jsonl"
+    private let eventLogFileName = "events.jsonl"
 
     @Published private(set) var supportText = "Core Motion + Core Location global sensor demo."
     @Published private(set) var permissionText = "Waiting for location authorization"
@@ -78,35 +78,35 @@ final class ARGeoTrackingViewModel: NSObject, ObservableObject {
         prefix: "geo",
         files: [
             SessionLogFileDefinition(
-                name: "geo_location.csv",
-                header: "timestamp,latitude,longitude,horizontal_accuracy_m,vertical_accuracy_m,altitude_m,speed_mps,course_deg"
+                name: "location.csv",
+                header: "timestamp,source_timestamp,latitude,longitude,horizontal_accuracy_m,vertical_accuracy_m,altitude_m,speed_mps,course_deg"
             ),
             SessionLogFileDefinition(
-                name: "geo_heading.csv",
-                header: "timestamp,magnetic_heading_deg,true_heading_deg,heading_accuracy_deg,x,y,z"
+                name: "heading.csv",
+                header: "timestamp,source_timestamp,magnetic_heading_deg,true_heading_deg,heading_accuracy_deg,x,y,z"
             ),
             SessionLogFileDefinition(
-                name: "geo_device_motion.csv",
-                header: "timestamp,roll_deg,pitch_deg,yaw_deg,gravity_x,gravity_y,gravity_z,user_accel_x,user_accel_y,user_accel_z,rotation_x,rotation_y,rotation_z,mag_field_x,mag_field_y,mag_field_z,mag_accuracy"
+                name: "device_motion.csv",
+                header: "timestamp,sensor_time_s,roll_deg,pitch_deg,yaw_deg,gravity_x,gravity_y,gravity_z,user_accel_x,user_accel_y,user_accel_z,rotation_x,rotation_y,rotation_z,mag_field_x,mag_field_y,mag_field_z,mag_accuracy"
             ),
             SessionLogFileDefinition(
-                name: "geo_accelerometer.csv",
-                header: "timestamp,ax_g,ay_g,az_g"
+                name: "accelerometer.csv",
+                header: "timestamp,sensor_time_s,ax_g,ay_g,az_g"
             ),
             SessionLogFileDefinition(
-                name: "geo_gyro.csv",
-                header: "timestamp,gx_rps,gy_rps,gz_rps"
+                name: "gyro.csv",
+                header: "timestamp,sensor_time_s,gx_rps,gy_rps,gz_rps"
             ),
             SessionLogFileDefinition(
-                name: "geo_magnetometer.csv",
-                header: "timestamp,mx_uT,my_uT,mz_uT"
+                name: "magnetometer.csv",
+                header: "timestamp,sensor_time_s,mx_uT,my_uT,mz_uT"
             ),
             SessionLogFileDefinition(
-                name: "geo_barometer.csv",
-                header: "timestamp,relative_altitude_m,pressure_kpa"
+                name: "barometer.csv",
+                header: "timestamp,sensor_time_s,relative_altitude_m,pressure_kpa"
             ),
-            SessionLogFileDefinition(name: "geo_status.jsonl", header: nil),
-            SessionLogFileDefinition(name: "geo_events.jsonl", header: nil)
+            SessionLogFileDefinition(name: "status.jsonl", header: nil),
+            SessionLogFileDefinition(name: "events.jsonl", header: nil)
         ]
     )
 
@@ -373,6 +373,7 @@ final class ARGeoTrackingViewModel: NSObject, ObservableObject {
 
     private func handleDeviceMotionSample(
         timestamp: Date,
+        sensorTime: TimeInterval,
         roll: Double,
         pitch: Double,
         yaw: Double,
@@ -407,8 +408,9 @@ final class ARGeoTrackingViewModel: NSObject, ObservableObject {
         motionText = "Device motion, accelerometer, gyro, and magnetometer active"
 
         let line = String(
-            format: "%@,%.3f,%.3f,%.3f,%.6f,%.6f,%.6f,%.6f,%.6f,%.6f,%.6f,%.6f,%.6f,%.6f,%.6f,%.6f,%@",
+            format: "%@,%.6f,%.3f,%.3f,%.3f,%.6f,%.6f,%.6f,%.6f,%.6f,%.6f,%.6f,%.6f,%.6f,%.6f,%.6f,%.6f,%@",
             makeLogTimestamp(),
+            sensorTime,
             roll,
             pitch,
             yaw,
@@ -437,10 +439,11 @@ final class ARGeoTrackingViewModel: NSObject, ObservableObject {
         logStatus()
     }
 
-    private func handleAccelerometerSample(timestamp: Date, x: Double, y: Double, z: Double) {
+    private func handleAccelerometerSample(timestamp: Date, sensorTime: TimeInterval, x: Double, y: Double, z: Double) {
         let line = String(
-            format: "%@,%.6f,%.6f,%.6f",
+            format: "%@,%.6f,%.6f,%.6f,%.6f",
             makeLogTimestamp(),
+            sensorTime,
             x,
             y,
             z
@@ -455,10 +458,11 @@ final class ARGeoTrackingViewModel: NSObject, ObservableObject {
         appendHistorySample(timestamp: timestamp, series: "Z", value: z, to: &accelerometerHistory)
     }
 
-    private func handleGyroSample(timestamp: Date, x: Double, y: Double, z: Double) {
+    private func handleGyroSample(timestamp: Date, sensorTime: TimeInterval, x: Double, y: Double, z: Double) {
         let line = String(
-            format: "%@,%.6f,%.6f,%.6f",
+            format: "%@,%.6f,%.6f,%.6f,%.6f",
             makeLogTimestamp(),
+            sensorTime,
             x,
             y,
             z
@@ -473,10 +477,11 @@ final class ARGeoTrackingViewModel: NSObject, ObservableObject {
         appendHistorySample(timestamp: timestamp, series: "Z", value: z, to: &gyroHistory)
     }
 
-    private func handleMagnetometerSample(timestamp: Date, x: Double, y: Double, z: Double) {
+    private func handleMagnetometerSample(timestamp: Date, sensorTime: TimeInterval, x: Double, y: Double, z: Double) {
         let line = String(
-            format: "%@,%.6f,%.6f,%.6f",
+            format: "%@,%.6f,%.6f,%.6f,%.6f",
             makeLogTimestamp(),
+            sensorTime,
             x,
             y,
             z
@@ -491,15 +496,16 @@ final class ARGeoTrackingViewModel: NSObject, ObservableObject {
         appendHistorySample(timestamp: timestamp, series: "Z", value: z, to: &magnetometerHistory)
     }
 
-    private func handleAltitudeSample(timestamp: Date, relativeAltitude: Double, pressure: Double) {
+    private func handleAltitudeSample(timestamp: Date, sensorTime: TimeInterval, relativeAltitude: Double, pressure: Double) {
         latestRelativeAltitudeMeters = relativeAltitude
         latestPressureKPa = pressure
 
         barometerText = String(format: "rel %.2f m | pressure %.2f kPa", relativeAltitude, pressure)
 
         let line = String(
-            format: "%@,%.4f,%.4f",
+            format: "%@,%.6f,%.4f,%.4f",
             makeLogTimestamp(),
+            sensorTime,
             relativeAltitude,
             pressure
         )
@@ -567,6 +573,7 @@ extension ARGeoTrackingViewModel: CLLocationManagerDelegate {
         let x = newHeading.x
         let y = newHeading.y
         let z = newHeading.z
+        let sourceTimestamp = newHeading.timestamp
 
         Task { @MainActor in
             let preferredHeading = trueHeading >= 0 ? trueHeading : magneticHeading
@@ -577,8 +584,9 @@ extension ARGeoTrackingViewModel: CLLocationManagerDelegate {
                 magneticHeading,
                 headingAccuracy
             )
-            self.appendHistorySample(timestamp: Date(), series: "Heading", value: preferredHeading, to: &self.headingHistory)
+            self.appendHistorySample(timestamp: sourceTimestamp, series: "Heading", value: preferredHeading, to: &self.headingHistory)
             self.logHeading(
+                sourceTimestamp: sourceTimestamp,
                 magneticHeading: magneticHeading,
                 trueHeading: trueHeading,
                 headingAccuracy: headingAccuracy,
@@ -639,11 +647,13 @@ private extension ARGeoTrackingViewModel {
             let magFieldY = motion.magneticField.field.y
             let magFieldZ = motion.magneticField.field.z
             let magAccuracy = describe(magneticFieldAccuracy: motion.magneticField.accuracy)
-            let timestamp = Date()
+            let sensorTime = motion.timestamp
+            let timestamp = estimateWallClockDate(fromSystemUptime: sensorTime)
 
             Task { @MainActor in
                 owner.handleDeviceMotionSample(
                     timestamp: timestamp,
+                    sensorTime: sensorTime,
                     roll: roll,
                     pitch: pitch,
                     yaw: yaw,
@@ -683,10 +693,11 @@ private extension ARGeoTrackingViewModel {
             let x = data.acceleration.x
             let y = data.acceleration.y
             let z = data.acceleration.z
-            let timestamp = Date()
+            let sensorTime = data.timestamp
+            let timestamp = estimateWallClockDate(fromSystemUptime: sensorTime)
 
             Task { @MainActor in
-                owner.handleAccelerometerSample(timestamp: timestamp, x: x, y: y, z: z)
+                owner.handleAccelerometerSample(timestamp: timestamp, sensorTime: sensorTime, x: x, y: y, z: z)
             }
         }
     }
@@ -709,10 +720,11 @@ private extension ARGeoTrackingViewModel {
             let x = data.rotationRate.x
             let y = data.rotationRate.y
             let z = data.rotationRate.z
-            let timestamp = Date()
+            let sensorTime = data.timestamp
+            let timestamp = estimateWallClockDate(fromSystemUptime: sensorTime)
 
             Task { @MainActor in
-                owner.handleGyroSample(timestamp: timestamp, x: x, y: y, z: z)
+                owner.handleGyroSample(timestamp: timestamp, sensorTime: sensorTime, x: x, y: y, z: z)
             }
         }
     }
@@ -735,10 +747,11 @@ private extension ARGeoTrackingViewModel {
             let x = data.magneticField.x
             let y = data.magneticField.y
             let z = data.magneticField.z
-            let timestamp = Date()
+            let sensorTime = data.timestamp
+            let timestamp = estimateWallClockDate(fromSystemUptime: sensorTime)
 
             Task { @MainActor in
-                owner.handleMagnetometerSample(timestamp: timestamp, x: x, y: y, z: z)
+                owner.handleMagnetometerSample(timestamp: timestamp, sensorTime: sensorTime, x: x, y: y, z: z)
             }
         }
     }
@@ -797,10 +810,11 @@ private extension ARGeoTrackingViewModel {
             guard let data else { return }
             let relativeAltitude = data.relativeAltitude.doubleValue
             let pressure = data.pressure.doubleValue
-            let timestamp = Date()
+            let sensorTime = data.timestamp
+            let timestamp = estimateWallClockDate(fromSystemUptime: sensorTime)
 
             Task { @MainActor in
-                owner.handleAltitudeSample(timestamp: timestamp, relativeAltitude: relativeAltitude, pressure: pressure)
+                owner.handleAltitudeSample(timestamp: timestamp, sensorTime: sensorTime, relativeAltitude: relativeAltitude, pressure: pressure)
             }
         }
     }
@@ -813,7 +827,7 @@ private extension ARGeoTrackingViewModel {
         let northMeters = (location.coordinate.latitude - referenceLocation.coordinate.latitude) * latitudeScale
         let eastMeters = (location.coordinate.longitude - referenceLocation.coordinate.longitude) * longitudeScale
         let altitudeDelta = location.altitude - referenceLocation.altitude
-        let timestamp = Date()
+        let timestamp = location.timestamp
 
         appendHistorySample(timestamp: timestamp, series: "North", value: northMeters, to: &locationHistory)
         appendHistorySample(timestamp: timestamp, series: "East", value: eastMeters, to: &locationHistory)
@@ -907,8 +921,9 @@ private extension ARGeoTrackingViewModel {
         let speed = max(location.speed, 0)
         let course = location.course >= 0 ? location.course : -1
         let line = String(
-            format: "%@,%.7f,%.7f,%.2f,%.2f,%.2f,%.2f,%.2f",
+            format: "%@,%@,%.7f,%.7f,%.2f,%.2f,%.2f,%.2f,%.2f",
             makeLogTimestamp(),
+            makeLogTimestamp(location.timestamp),
             location.coordinate.latitude,
             location.coordinate.longitude,
             location.horizontalAccuracy,
@@ -924,6 +939,7 @@ private extension ARGeoTrackingViewModel {
     }
 
     func logHeading(
+        sourceTimestamp: Date,
         magneticHeading: CLLocationDirection,
         trueHeading: CLLocationDirection,
         headingAccuracy: CLLocationDirection,
@@ -932,8 +948,9 @@ private extension ARGeoTrackingViewModel {
         z: CLHeadingComponentValue
     ) {
         let line = String(
-            format: "%@,%.3f,%.3f,%.3f,%.6f,%.6f,%.6f",
+            format: "%@,%@,%.3f,%.3f,%.3f,%.6f,%.6f,%.6f",
             makeLogTimestamp(),
+            makeLogTimestamp(sourceTimestamp),
             magneticHeading,
             trueHeading,
             headingAccuracy,

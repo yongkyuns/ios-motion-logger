@@ -14,6 +14,8 @@ final class ARTrackingViewModel: NSObject, ObservableObject, ARSessionDelegate {
     private let semanticPublishInterval: TimeInterval = 0.25
     private let poseLogInterval: TimeInterval = 0.1
     private let poseLogFileName = "world_pose.csv"
+    private let mapPointLogFileName = "world_map_points.csv"
+    private let semanticMeshLogFileName = "world_semantic_mesh.jsonl"
     private let eventLogFileName = "world_events.jsonl"
 
     @Published private(set) var supportText = "Checking ARKit support..."
@@ -47,6 +49,11 @@ final class ARTrackingViewModel: NSObject, ObservableObject, ARSessionDelegate {
                 name: "world_pose.csv",
                 header: "timestamp,uptime_seconds,x,y,z,roll_deg,pitch_deg,yaw_deg,tracking_state,mapping_state,raw_feature_count,map_feature_count,semantic_chunk_count"
             ),
+            SessionLogFileDefinition(
+                name: "world_map_points.csv",
+                header: "timestamp,uptime_seconds,x,y,z"
+            ),
+            SessionLogFileDefinition(name: "world_semantic_mesh.jsonl", header: nil),
             SessionLogFileDefinition(name: "world_events.jsonl", header: nil)
         ]
     )
@@ -56,7 +63,8 @@ final class ARTrackingViewModel: NSObject, ObservableObject, ARSessionDelegate {
     }
 
     func makeExportArchive() async -> URL? {
-        await logWriter.makeArchive()
+        await writeFinalSemanticMeshSnapshot()
+        return await logWriter.makeArchive()
     }
 
     func attachSession(_ session: ARSession) {
@@ -320,15 +328,35 @@ final class ARTrackingViewModel: NSObject, ObservableObject, ARSessionDelegate {
         }
 
         var added = 0
+        var appendedLines: [String] = []
+        let timestamp = makeLogTimestamp()
+        let uptime = ProcessInfo.processInfo.systemUptime
 
         for point in points {
             let key = quantizedKey(for: point)
             if featurePointKeys.insert(key).inserted {
                 mapFeaturePoints.append(point)
                 added += 1
+                appendedLines.append(
+                    String(
+                        format: "%@,%.3f,%.5f,%.5f,%.5f",
+                        timestamp,
+                        uptime,
+                        point.x,
+                        point.y,
+                        point.z
+                    )
+                )
                 if mapFeaturePoints.count >= maximumFeaturePoints {
                     break
                 }
+            }
+        }
+
+        if !appendedLines.isEmpty {
+            let lines = appendedLines
+            Task {
+                await logWriter.append(lines: lines, to: mapPointLogFileName)
             }
         }
 
@@ -440,8 +468,44 @@ final class ARTrackingViewModel: NSObject, ObservableObject, ARSessionDelegate {
         }
     }
 
+    private func writeFinalSemanticMeshSnapshot() async {
+        let timestamp = makeLogTimestamp()
+        let uptime = ProcessInfo.processInfo.systemUptime
+        let chunks = semanticChunkByID.values.sorted { $0.id.uuidString < $1.id.uuidString }
+        let lines = chunks.compactMap { chunk -> String? in
+            let groups = chunk.groups.map { group in
+                [
+                    "semantic_class": group.semanticClass.rawValue,
+                    "vertices": group.vertices.map(Self.serialize(vertex:))
+                ]
+            }
+
+            let payload: [String: Any] = [
+                "timestamp": timestamp,
+                "uptime_seconds": uptime,
+                "type": "final_snapshot_chunk",
+                "chunk_id": chunk.id.uuidString,
+                "groups": groups
+            ]
+
+            guard JSONSerialization.isValidJSONObject(payload),
+                  let data = try? JSONSerialization.data(withJSONObject: payload, options: []),
+                  let line = String(data: data, encoding: .utf8) else {
+                return nil
+            }
+
+            return line
+        }
+
+        await logWriter.overwrite(lines: lines, to: semanticMeshLogFileName)
+    }
+
     nonisolated private static func csvField(_ value: String) -> String {
         "\"\(value.replacingOccurrences(of: "\"", with: "\"\""))\""
+    }
+
+    nonisolated private static func serialize(vertex: SIMD3<Float>) -> [Float] {
+        [vertex.x, vertex.y, vertex.z]
     }
 
     nonisolated private static func makeSemanticMeshChunk(from anchor: ARMeshAnchor) -> SemanticMeshChunk {
