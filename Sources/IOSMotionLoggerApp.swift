@@ -1,7 +1,7 @@
 import SwiftUI
 
 @main
-struct MonocularSLAMDemoApp: App {
+struct IOSMotionLoggerApp: App {
     var body: some Scene {
         WindowGroup {
             ContentView()

@@ -25,8 +25,8 @@ jobs:
       - name: Build iOS app
         run: |
           xcodebuild \
-            -project MonocularSLAMDemo.xcodeproj \
-            -scheme MonocularSLAMDemo \
+            -project IOSMotionLogger.xcodeproj \
+            -scheme IOSMotionLogger \
             -destination 'generic/platform=iOS' \
             build \
             CODE_SIGNING_ALLOWED=NO

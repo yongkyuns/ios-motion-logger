@@ -1,8 +1,8 @@
-name: MonocularSLAMDemo
+name: IOSMotionLogger
 options:
   bundleIdPrefix: com.example
 targets:
-  MonocularSLAMDemo:
+  IOSMotionLogger:
     type: application
     platform: iOS
     deploymentTarget: "17.0"
@@ -10,8 +10,8 @@ targets:
       - path: Sources
     settings:
       base:
-        PRODUCT_BUNDLE_IDENTIFIER: com.example.MonocularSLAMDemo
-        PRODUCT_NAME: MonocularSLAMDemo
+        PRODUCT_BUNDLE_IDENTIFIER: com.example.IOSMotionLogger
+        PRODUCT_NAME: iOS Motion Logger
         SWIFT_VERSION: 6.0
         TARGETED_DEVICE_FAMILY: "1"
         SUPPORTS_MACCATALYST: NO

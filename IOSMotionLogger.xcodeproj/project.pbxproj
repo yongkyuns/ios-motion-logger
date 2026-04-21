@@ -1,0 +1,355 @@
+// !$*UTF8*$!
+{
+	archiveVersion = 1;
+	classes = {
+	};
+	objectVersion = 77;
+	objects = {
+
+/* Begin PBXBuildFile section */
+		0347B9172C3370AD267F8C0E /* ARTrackingViewModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = BF5F9F5270142D73EB2FF4F4 /* ARTrackingViewModel.swift */; };
+		1027A3F33B7AEBF095FED8D5 /* ThreeDMapView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7677751E6C8E89227B533DC2 /* ThreeDMapView.swift */; };
+		1AD516CF30975ACB21B08DED /* SessionLogWriter.swift in Sources */ = {isa = PBXBuildFile; fileRef = 219957B96BB3FE33C950B84B /* SessionLogWriter.swift */; };
+		2E76532B8A2C0EEC45D1675A /* ContentView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 5814DF0D7197F342F31026C7 /* ContentView.swift */; };
+		479374AAF26CF810FB379A05 /* TopDownTrajectoryView.swift in Sources */ = {isa = PBXBuildFile; fileRef = E8CD028F71D74DA4794EDB6F /* TopDownTrajectoryView.swift */; };
+		54563487C73F89A2AEF76A9F /* ActivityViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 707717E8E0D79D1CE1A9931E /* ActivityViewController.swift */; };
+		7F3F75F14071847C4762B3EA /* IOSMotionLoggerApp.swift in Sources */ = {isa = PBXBuildFile; fileRef = 622752BBFA1A1A1BA62ED5A3 /* IOSMotionLoggerApp.swift */; };
+		7FABE845502C4EE54F72EA77 /* SemanticMeshModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = 053A5D6DBCE452EBA134D723 /* SemanticMeshModel.swift */; };
+		8033CC7A8F4F7D63AF423985 /* ARViewContainer.swift in Sources */ = {isa = PBXBuildFile; fileRef = DD874BFF15503324B1AB1D08 /* ARViewContainer.swift */; };
+		8FB573CE949626C589550E7E /* GeoTraceMapView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 9C5E69A2D765FDE15841BB1C /* GeoTraceMapView.swift */; };
+		94B3D6977714E82BA0188FC1 /* ARGeoTrackingViewModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = AAC2C7BD9731970944F89013 /* ARGeoTrackingViewModel.swift */; };
+		A74CBBDD544DB1C679912144 /* ARGeoTrackingViewContainer.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4101571CAC77F7C4C6F8F128 /* ARGeoTrackingViewContainer.swift */; };
+		D536FC98F88CDDE5845F9633 /* LogTimestamp.swift in Sources */ = {isa = PBXBuildFile; fileRef = FB3466428CE9FF13BD401AF2 /* LogTimestamp.swift */; };
+/* End PBXBuildFile section */
+
+/* Begin PBXFileReference section */
+		053A5D6DBCE452EBA134D723 /* SemanticMeshModel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SemanticMeshModel.swift; sourceTree = "<group>"; };
+		219957B96BB3FE33C950B84B /* SessionLogWriter.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SessionLogWriter.swift; sourceTree = "<group>"; };
+		4101571CAC77F7C4C6F8F128 /* ARGeoTrackingViewContainer.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ARGeoTrackingViewContainer.swift; sourceTree = "<group>"; };
+		5814DF0D7197F342F31026C7 /* ContentView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ContentView.swift; sourceTree = "<group>"; };
+		622752BBFA1A1A1BA62ED5A3 /* IOSMotionLoggerApp.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = IOSMotionLoggerApp.swift; sourceTree = "<group>"; };
+		707717E8E0D79D1CE1A9931E /* ActivityViewController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ActivityViewController.swift; sourceTree = "<group>"; };
+		7677751E6C8E89227B533DC2 /* ThreeDMapView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ThreeDMapView.swift; sourceTree = "<group>"; };
+		7B2F52F6BB2D451E29282251 /* IOSMotionLogger.app */ = {isa = PBXFileReference; includeInIndex = 0; lastKnownFileType = wrapper.application; path = IOSMotionLogger.app; sourceTree = BUILT_PRODUCTS_DIR; };
+		9C5E69A2D765FDE15841BB1C /* GeoTraceMapView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = GeoTraceMapView.swift; sourceTree = "<group>"; };
+		AAC2C7BD9731970944F89013 /* ARGeoTrackingViewModel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ARGeoTrackingViewModel.swift; sourceTree = "<group>"; };
+		BF5F9F5270142D73EB2FF4F4 /* ARTrackingViewModel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ARTrackingViewModel.swift; sourceTree = "<group>"; };
+		DD874BFF15503324B1AB1D08 /* ARViewContainer.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ARViewContainer.swift; sourceTree = "<group>"; };
+		E8CD028F71D74DA4794EDB6F /* TopDownTrajectoryView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TopDownTrajectoryView.swift; sourceTree = "<group>"; };
+		FB3466428CE9FF13BD401AF2 /* LogTimestamp.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LogTimestamp.swift; sourceTree = "<group>"; };
+/* End PBXFileReference section */
+
+/* Begin PBXGroup section */
+		5FA5F61B38A0DB0B16162E8E /* Sources */ = {
+			isa = PBXGroup;
+			children = (
+				707717E8E0D79D1CE1A9931E /* ActivityViewController.swift */,
+				4101571CAC77F7C4C6F8F128 /* ARGeoTrackingViewContainer.swift */,
+				AAC2C7BD9731970944F89013 /* ARGeoTrackingViewModel.swift */,
+				BF5F9F5270142D73EB2FF4F4 /* ARTrackingViewModel.swift */,
+				DD874BFF15503324B1AB1D08 /* ARViewContainer.swift */,
+				5814DF0D7197F342F31026C7 /* ContentView.swift */,
+				9C5E69A2D765FDE15841BB1C /* GeoTraceMapView.swift */,
+				622752BBFA1A1A1BA62ED5A3 /* IOSMotionLoggerApp.swift */,
+				FB3466428CE9FF13BD401AF2 /* LogTimestamp.swift */,
+				053A5D6DBCE452EBA134D723 /* SemanticMeshModel.swift */,
+				219957B96BB3FE33C950B84B /* SessionLogWriter.swift */,
+				7677751E6C8E89227B533DC2 /* ThreeDMapView.swift */,
+				E8CD028F71D74DA4794EDB6F /* TopDownTrajectoryView.swift */,
+			);
+			path = Sources;
+			sourceTree = "<group>";
+		};
+		6C1FFCB7A9BC001F1D81BA0A = {
+			isa = PBXGroup;
+			children = (
+				5FA5F61B38A0DB0B16162E8E /* Sources */,
+				B65009B65AF59F4A7CF3DDC7 /* Products */,
+			);
+			sourceTree = "<group>";
+		};
+		B65009B65AF59F4A7CF3DDC7 /* Products */ = {
+			isa = PBXGroup;
+			children = (
+				7B2F52F6BB2D451E29282251 /* IOSMotionLogger.app */,
+			);
+			name = Products;
+			sourceTree = "<group>";
+		};
+/* End PBXGroup section */
+
+/* Begin PBXNativeTarget section */
+		29AC9C4A2AF4EB527C843E53 /* IOSMotionLogger */ = {
+			isa = PBXNativeTarget;
+			buildConfigurationList = 14B97B7A992CC793A1DC33D8 /* Build configuration list for PBXNativeTarget "IOSMotionLogger" */;
+			buildPhases = (
+				9D3C389942AAFA6D82215268 /* Sources */,
+			);
+			buildRules = (
+			);
+			dependencies = (
+			);
+			name = IOSMotionLogger;
+			packageProductDependencies = (
+			);
+			productName = IOSMotionLogger;
+			productReference = 7B2F52F6BB2D451E29282251 /* IOSMotionLogger.app */;
+			productType = "com.apple.product-type.application";
+		};
+/* End PBXNativeTarget section */
+
+/* Begin PBXProject section */
+		3D0CE20F7F21911621F85B5D /* Project object */ = {
+			isa = PBXProject;
+			attributes = {
+				BuildIndependentTargetsInParallel = YES;
+				LastUpgradeCheck = 1430;
+				TargetAttributes = {
+					29AC9C4A2AF4EB527C843E53 = {
+						ProvisioningStyle = Automatic;
+					};
+				};
+			};
+			buildConfigurationList = 7CAC3E8B038F58BB6BA4319F /* Build configuration list for PBXProject "IOSMotionLogger" */;
+			compatibilityVersion = "Xcode 14.0";
+			developmentRegion = en;
+			hasScannedForEncodings = 0;
+			knownRegions = (
+				Base,
+				en,
+			);
+			mainGroup = 6C1FFCB7A9BC001F1D81BA0A;
+			minimizedProjectReferenceProxies = 1;
+			preferredProjectObjectVersion = 77;
+			projectDirPath = "";
+			projectRoot = "";
+			targets = (
+				29AC9C4A2AF4EB527C843E53 /* IOSMotionLogger */,
+			);
+		};
+/* End PBXProject section */
+
+/* Begin PBXSourcesBuildPhase section */
+		9D3C389942AAFA6D82215268 /* Sources */ = {
+			isa = PBXSourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				A74CBBDD544DB1C679912144 /* ARGeoTrackingViewContainer.swift in Sources */,
+				94B3D6977714E82BA0188FC1 /* ARGeoTrackingViewModel.swift in Sources */,
+				0347B9172C3370AD267F8C0E /* ARTrackingViewModel.swift in Sources */,
+				8033CC7A8F4F7D63AF423985 /* ARViewContainer.swift in Sources */,
+				54563487C73F89A2AEF76A9F /* ActivityViewController.swift in Sources */,
+				2E76532B8A2C0EEC45D1675A /* ContentView.swift in Sources */,
+				8FB573CE949626C589550E7E /* GeoTraceMapView.swift in Sources */,
+				7F3F75F14071847C4762B3EA /* IOSMotionLoggerApp.swift in Sources */,
+				D536FC98F88CDDE5845F9633 /* LogTimestamp.swift in Sources */,
+				7FABE845502C4EE54F72EA77 /* SemanticMeshModel.swift in Sources */,
+				1AD516CF30975ACB21B08DED /* SessionLogWriter.swift in Sources */,
+				1027A3F33B7AEBF095FED8D5 /* ThreeDMapView.swift in Sources */,
+				479374AAF26CF810FB379A05 /* TopDownTrajectoryView.swift in Sources */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+/* End PBXSourcesBuildPhase section */
+
+/* Begin XCBuildConfiguration section */
+		3EB3EB971472E07A48080045 /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ALWAYS_SEARCH_USER_PATHS = NO;
+				CLANG_ANALYZER_NONNULL = YES;
+				CLANG_ANALYZER_NUMBER_OBJECT_CONVERSION = YES_AGGRESSIVE;
+				CLANG_CXX_LANGUAGE_STANDARD = "gnu++14";
+				CLANG_CXX_LIBRARY = "libc++";
+				CLANG_ENABLE_MODULES = YES;
+				CLANG_ENABLE_OBJC_ARC = YES;
+				CLANG_ENABLE_OBJC_WEAK = YES;
+				CLANG_WARN_BLOCK_CAPTURE_AUTORELEASING = YES;
+				CLANG_WARN_BOOL_CONVERSION = YES;
+				CLANG_WARN_COMMA = YES;
+				CLANG_WARN_CONSTANT_CONVERSION = YES;
+				CLANG_WARN_DEPRECATED_OBJC_IMPLEMENTATIONS = YES;
+				CLANG_WARN_DIRECT_OBJC_ISA_USAGE = YES_ERROR;
+				CLANG_WARN_DOCUMENTATION_COMMENTS = YES;
+				CLANG_WARN_EMPTY_BODY = YES;
+				CLANG_WARN_ENUM_CONVERSION = YES;
+				CLANG_WARN_INFINITE_RECURSION = YES;
+				CLANG_WARN_INT_CONVERSION = YES;
+				CLANG_WARN_NON_LITERAL_NULL_CONVERSION = YES;
+				CLANG_WARN_OBJC_IMPLICIT_RETAIN_SELF = YES;
+				CLANG_WARN_OBJC_LITERAL_CONVERSION = YES;
+				CLANG_WARN_OBJC_ROOT_CLASS = YES_ERROR;
+				CLANG_WARN_QUOTED_INCLUDE_IN_FRAMEWORK_HEADER = YES;
+				CLANG_WARN_RANGE_LOOP_ANALYSIS = YES;
+				CLANG_WARN_STRICT_PROTOTYPES = YES;
+				CLANG_WARN_SUSPICIOUS_MOVE = YES;
+				CLANG_WARN_UNGUARDED_AVAILABILITY = YES_AGGRESSIVE;
+				CLANG_WARN_UNREACHABLE_CODE = YES;
+				CLANG_WARN__DUPLICATE_METHOD_MATCH = YES;
+				COPY_PHASE_STRIP = NO;
+				DEBUG_INFORMATION_FORMAT = dwarf;
+				ENABLE_STRICT_OBJC_MSGSEND = YES;
+				ENABLE_TESTABILITY = YES;
+				GCC_C_LANGUAGE_STANDARD = gnu11;
+				GCC_DYNAMIC_NO_PIC = NO;
+				GCC_NO_COMMON_BLOCKS = YES;
+				GCC_OPTIMIZATION_LEVEL = 0;
+				GCC_PREPROCESSOR_DEFINITIONS = (
+					"$(inherited)",
+					"DEBUG=1",
+				);
+				GCC_WARN_64_TO_32_BIT_CONVERSION = YES;
+				GCC_WARN_ABOUT_RETURN_TYPE = YES_ERROR;
+				GCC_WARN_UNDECLARED_SELECTOR = YES;
+				GCC_WARN_UNINITIALIZED_AUTOS = YES_AGGRESSIVE;
+				GCC_WARN_UNUSED_FUNCTION = YES;
+				GCC_WARN_UNUSED_VARIABLE = YES;
+				MTL_ENABLE_DEBUG_INFO = INCLUDE_SOURCE;
+				MTL_FAST_MATH = YES;
+				ONLY_ACTIVE_ARCH = YES;
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				SDKROOT = iphoneos;
+				SWIFT_ACTIVE_COMPILATION_CONDITIONS = DEBUG;
+				SWIFT_OPTIMIZATION_LEVEL = "-Onone";
+				SWIFT_VERSION = 5.0;
+			};
+			name = Debug;
+		};
+		76C1AD787C5F0DBFEB53603E /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ALWAYS_SEARCH_USER_PATHS = NO;
+				CLANG_ANALYZER_NONNULL = YES;
+				CLANG_ANALYZER_NUMBER_OBJECT_CONVERSION = YES_AGGRESSIVE;
+				CLANG_CXX_LANGUAGE_STANDARD = "gnu++14";
+				CLANG_CXX_LIBRARY = "libc++";
+				CLANG_ENABLE_MODULES = YES;
+				CLANG_ENABLE_OBJC_ARC = YES;
+				CLANG_ENABLE_OBJC_WEAK = YES;
+				CLANG_WARN_BLOCK_CAPTURE_AUTORELEASING = YES;
+				CLANG_WARN_BOOL_CONVERSION = YES;
+				CLANG_WARN_COMMA = YES;
+				CLANG_WARN_CONSTANT_CONVERSION = YES;
+				CLANG_WARN_DEPRECATED_OBJC_IMPLEMENTATIONS = YES;
+				CLANG_WARN_DIRECT_OBJC_ISA_USAGE = YES_ERROR;
+				CLANG_WARN_DOCUMENTATION_COMMENTS = YES;
+				CLANG_WARN_EMPTY_BODY = YES;
+				CLANG_WARN_ENUM_CONVERSION = YES;
+				CLANG_WARN_INFINITE_RECURSION = YES;
+				CLANG_WARN_INT_CONVERSION = YES;
+				CLANG_WARN_NON_LITERAL_NULL_CONVERSION = YES;
+				CLANG_WARN_OBJC_IMPLICIT_RETAIN_SELF = YES;
+				CLANG_WARN_OBJC_LITERAL_CONVERSION = YES;
+				CLANG_WARN_OBJC_ROOT_CLASS = YES_ERROR;
+				CLANG_WARN_QUOTED_INCLUDE_IN_FRAMEWORK_HEADER = YES;
+				CLANG_WARN_RANGE_LOOP_ANALYSIS = YES;
+				CLANG_WARN_STRICT_PROTOTYPES = YES;
+				CLANG_WARN_SUSPICIOUS_MOVE = YES;
+				CLANG_WARN_UNGUARDED_AVAILABILITY = YES_AGGRESSIVE;
+				CLANG_WARN_UNREACHABLE_CODE = YES;
+				CLANG_WARN__DUPLICATE_METHOD_MATCH = YES;
+				COPY_PHASE_STRIP = NO;
+				DEBUG_INFORMATION_FORMAT = "dwarf-with-dsym";
+				ENABLE_NS_ASSERTIONS = NO;
+				ENABLE_STRICT_OBJC_MSGSEND = YES;
+				GCC_C_LANGUAGE_STANDARD = gnu11;
+				GCC_NO_COMMON_BLOCKS = YES;
+				GCC_WARN_64_TO_32_BIT_CONVERSION = YES;
+				GCC_WARN_ABOUT_RETURN_TYPE = YES_ERROR;
+				GCC_WARN_UNDECLARED_SELECTOR = YES;
+				GCC_WARN_UNINITIALIZED_AUTOS = YES_AGGRESSIVE;
+				GCC_WARN_UNUSED_FUNCTION = YES;
+				GCC_WARN_UNUSED_VARIABLE = YES;
+				MTL_ENABLE_DEBUG_INFO = NO;
+				MTL_FAST_MATH = YES;
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				SDKROOT = iphoneos;
+				SWIFT_COMPILATION_MODE = wholemodule;
+				SWIFT_OPTIMIZATION_LEVEL = "-O";
+				SWIFT_VERSION = 5.0;
+			};
+			name = Release;
+		};
+		AC23C8359732FB4F85C9F958 /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
+				CODE_SIGN_IDENTITY = "iPhone Developer";
+				CODE_SIGN_STYLE = Automatic;
+				GENERATE_INFOPLIST_FILE = YES;
+				INFOPLIST_FILE = Info.plist;
+				INFOPLIST_KEY_LSApplicationCategoryType = "public.app-category.developer-tools";
+				INFOPLIST_KEY_NSCameraUsageDescription = "This app uses the camera for AR world tracking.";
+				INFOPLIST_KEY_NSLocationWhenInUseUsageDescription = "This app uses your location for GPS and heading in the geo sensor demo.";
+				INFOPLIST_KEY_NSMotionUsageDescription = "This app uses motion sensors to show attitude, IMU, and barometer data.";
+				INFOPLIST_KEY_UIApplicationSceneManifest_Generation = YES;
+				INFOPLIST_KEY_UILaunchScreen_Generation = YES;
+				INFOPLIST_KEY_UIRequiresFullScreen = YES;
+				IPHONEOS_DEPLOYMENT_TARGET = 17.0;
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/Frameworks",
+				);
+				PRODUCT_BUNDLE_IDENTIFIER = com.example.IOSMotionLogger;
+				PRODUCT_NAME = "iOS Motion Logger";
+				SDKROOT = iphoneos;
+				SUPPORTS_MACCATALYST = NO;
+				SWIFT_VERSION = 6.0;
+				TARGETED_DEVICE_FAMILY = 1;
+			};
+			name = Debug;
+		};
+		CB6F807726E8AAEA72490F2E /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
+				CODE_SIGN_IDENTITY = "iPhone Developer";
+				CODE_SIGN_STYLE = Automatic;
+				GENERATE_INFOPLIST_FILE = YES;
+				INFOPLIST_FILE = Info.plist;
+				INFOPLIST_KEY_LSApplicationCategoryType = "public.app-category.developer-tools";
+				INFOPLIST_KEY_NSCameraUsageDescription = "This app uses the camera for AR world tracking.";
+				INFOPLIST_KEY_NSLocationWhenInUseUsageDescription = "This app uses your location for GPS and heading in the geo sensor demo.";
+				INFOPLIST_KEY_NSMotionUsageDescription = "This app uses motion sensors to show attitude, IMU, and barometer data.";
+				INFOPLIST_KEY_UIApplicationSceneManifest_Generation = YES;
+				INFOPLIST_KEY_UILaunchScreen_Generation = YES;
+				INFOPLIST_KEY_UIRequiresFullScreen = YES;
+				IPHONEOS_DEPLOYMENT_TARGET = 17.0;
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/Frameworks",
+				);
+				PRODUCT_BUNDLE_IDENTIFIER = com.example.IOSMotionLogger;
+				PRODUCT_NAME = "iOS Motion Logger";
+				SDKROOT = iphoneos;
+				SUPPORTS_MACCATALYST = NO;
+				SWIFT_VERSION = 6.0;
+				TARGETED_DEVICE_FAMILY = 1;
+			};
+			name = Release;
+		};
+/* End XCBuildConfiguration section */
+
+/* Begin XCConfigurationList section */
+		14B97B7A992CC793A1DC33D8 /* Build configuration list for PBXNativeTarget "IOSMotionLogger" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				AC23C8359732FB4F85C9F958 /* Debug */,
+				CB6F807726E8AAEA72490F2E /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Debug;
+		};
+		7CAC3E8B038F58BB6BA4319F /* Build configuration list for PBXProject "IOSMotionLogger" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				3EB3EB971472E07A48080045 /* Debug */,
+				76C1AD787C5F0DBFEB53603E /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Debug;
+		};
+/* End XCConfigurationList section */
+	};
+	rootObject = 3D0CE20F7F21911621F85B5D /* Project object */;
+}

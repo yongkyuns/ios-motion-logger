@@ -5,7 +5,7 @@
 [![iOS 17+](https://img.shields.io/badge/iOS-17%2B-blue.svg)](#requirements)
 [![Swift 6](https://img.shields.io/badge/Swift-6-orange.svg)](#requirements)
 
-📱 A friendly iPhone app for logging motion, location, and AR sensor data, then exporting it for analysis.
+📱 A simple iPhone app for logging motion, location, and AR sensor data, then exporting it for analysis.
 
 This repo gives you two demos:
 
@@ -47,21 +47,21 @@ cd ios-motion-logger
 You can use the checked-in project directly:
 
 ```bash
-open MonocularSLAMDemo.xcodeproj
+open IOSMotionLogger.xcodeproj
 ```
 
 If you want to regenerate it first:
 
 ```bash
 xcodegen generate
-open MonocularSLAMDemo.xcodeproj
+open IOSMotionLogger.xcodeproj
 ```
 
 ### 3. Set up signing
 
 In Xcode:
 
-1. Select the `MonocularSLAMDemo` target
+1. Select the `IOSMotionLogger` target
 2. Open `Signing & Capabilities`
 3. Choose your Apple development team
 4. Build and run on your iPhone
