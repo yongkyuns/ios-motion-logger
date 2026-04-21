@@ -7,7 +7,7 @@
 
 📱 A simple iPhone app for logging motion, location, and AR sensor data, then exporting it for analysis.
 
-<img src="docs/images/indoor-example.png" alt="Indoor mapping example" width="720" />
+<img src="docs/images/indoor-example.png" alt="Indoor mapping example" width="504" />
 
 This repo gives you two demos:
 
