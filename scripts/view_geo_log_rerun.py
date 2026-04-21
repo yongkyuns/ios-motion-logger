@@ -406,8 +406,9 @@ def log_geo_entities(raw_location_rows: list[dict[str, str]]) -> None:
     )
 
 
-def send_blueprint(use_mapbox: bool) -> None:
+def send_blueprint(use_mapbox: bool, has_barometer: bool) -> None:
     map_background = rrb.MapProvider.MapboxDark if use_mapbox else rrb.MapProvider.OpenStreetMap
+    active_tab = "Barometer" if has_barometer else "Position"
     blueprint = rrb.Blueprint(
         rrb.Horizontal(
             rrb.MapView(
@@ -434,8 +435,13 @@ def send_blueprint(use_mapbox: bool) -> None:
                     contents=["/plots/accelerometer_mps2", "/plots/gyro", "/plots/magnetometer"],
                     name="Raw IMU",
                 ),
+                rrb.TimeSeriesView(
+                    origin="/",
+                    contents=["/plots/barometer_relative_altitude_m", "/plots/barometer_pressure_kpa"],
+                    name="Barometer",
+                ),
                 rrb.TextLogView(origin="/", contents=["/status/**", "/events/**"], name="Logs"),
-                active_tab="Position",
+                active_tab=active_tab,
                 name="Telemetry",
             ),
             column_shares=[0.55, 0.45],
@@ -490,7 +496,7 @@ def main() -> None:
 
     init_static_layout()
     log_geo_entities(raw_location_rows)
-    send_blueprint(use_mapbox=bool(mapbox_token))
+    send_blueprint(use_mapbox=bool(mapbox_token), has_barometer=bool(barometer_samples))
     log_locations(location_samples, start)
     log_heading(heading_samples, start)
     log_device_motion(motion_samples, start)

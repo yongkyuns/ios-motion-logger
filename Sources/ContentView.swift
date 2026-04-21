@@ -83,9 +83,9 @@ private enum DemoMode: String, CaseIterable, Identifiable {
     var title: String {
         switch self {
         case .world:
-            return "Current Demo"
+            return "Indoor"
         case .geo:
-            return "Geo Demo"
+            return "Outdoor"
         }
     }
 }

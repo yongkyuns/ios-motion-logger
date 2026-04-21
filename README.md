@@ -4,8 +4,8 @@ An iPhone app for logging motion and location sensor data with live visualizatio
 
 It includes:
 
-- `World Demo`: ARKit-based trajectory and semantic mapping views
-- `Geo Demo`: Core Location + Core Motion logging for GPS, heading, device motion, accelerometer, gyroscope, magnetometer, and barometer
+- `Indoor`: ARKit-based trajectory and semantic mapping views
+- `Outdoor`: Core Location + Core Motion logging for GPS, heading, device motion, accelerometer, gyroscope, magnetometer, and barometer
 - export of on-device session logs as a single JSON package
 - Python helpers to visualize exported logs in Rerun or on a Mapbox map
 
@@ -32,7 +32,7 @@ The repository does not include a personal development team or private bundle id
 
 ## Logging
 
-The `Geo Demo` exports a JSON package containing embedded CSV and JSONL files such as:
+The `Outdoor` mode exports a JSON package containing embedded CSV and JSONL files such as:
 
 - `geo_location.csv`
 - `geo_heading.csv`

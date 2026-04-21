@@ -50,6 +50,7 @@ final class ARGeoTrackingViewModel: NSObject, ObservableObject {
 
     private let locationManager = CLLocationManager()
     private let motionManager = CMMotionManager()
+    private let motionActivityManager = CMMotionActivityManager()
     private let altimeter = CMAltimeter()
     private let sensorQueue: OperationQueue = {
         let queue = OperationQueue()
@@ -69,6 +70,9 @@ final class ARGeoTrackingViewModel: NSObject, ObservableObject {
     private let maxHistorySamples = 240
     private let maxTracePoints = 1_500
     private var historySegmentID = 0
+    private var isBarometerUpdating = false
+    private var isRequestingBarometerAuthorization = false
+    private var hasRetriedBarometerStart = false
 
     private let logWriter = SessionLogWriter(
         prefix: "geo",
@@ -145,6 +149,9 @@ final class ARGeoTrackingViewModel: NSObject, ObservableObject {
         latestPressureKPa = nil
         latestRelativeAltitudeMeters = nil
         currentLocationSnapshot = nil
+        isBarometerUpdating = false
+        isRequestingBarometerAuthorization = false
+        hasRetriedBarometerStart = false
 
         positionText = "Locating..."
         altitudeText = "Altitude unavailable"
@@ -282,6 +289,70 @@ final class ARGeoTrackingViewModel: NSObject, ObservableObject {
             return
         }
 
+        switch CMAltimeter.authorizationStatus() {
+        case .authorized:
+            beginBarometerUpdates()
+        case .notDetermined:
+            requestBarometerAuthorizationAndStart()
+        case .denied:
+            barometerText = "Enable Motion & Fitness for barometer"
+            logEvent(type: "barometer_authorization_denied", payload: [:])
+            logStatus(force: true)
+        case .restricted:
+            barometerText = "Enable Fitness Tracking in Settings"
+            logEvent(type: "barometer_authorization_restricted", payload: [:])
+            logStatus(force: true)
+        @unknown default:
+            barometerText = "Barometer authorization unknown"
+            logEvent(type: "barometer_authorization_unknown", payload: [:])
+            logStatus(force: true)
+        }
+    }
+
+    private func requestBarometerAuthorizationAndStart() {
+        guard !isRequestingBarometerAuthorization else { return }
+
+        barometerText = "Waiting for Motion & Fitness permission"
+        isRequestingBarometerAuthorization = true
+        logEvent(type: "barometer_authorization_requested", payload: [:])
+        logStatus(force: true)
+
+        guard CMMotionActivityManager.isActivityAvailable() else {
+            isRequestingBarometerAuthorization = false
+            logEvent(type: "motion_activity_unavailable_for_barometer_auth", payload: [:])
+            beginBarometerUpdates()
+            return
+        }
+
+        let now = Date()
+        motionActivityManager.queryActivityStarting(from: now, to: now, to: sensorQueue) { [weak self] _, error in
+            guard let self else { return }
+            let description = error?.localizedDescription
+
+            Task { @MainActor in
+                self.isRequestingBarometerAuthorization = false
+
+                if let description {
+                    self.logEvent(
+                        type: "barometer_authorization_query_error",
+                        payload: ["description": description]
+                    )
+                }
+
+                self.beginBarometerUpdates()
+            }
+        }
+    }
+
+    private func beginBarometerUpdates() {
+        guard !isBarometerUpdating else { return }
+
+        isBarometerUpdating = true
+        barometerText = "Starting barometer"
+        logEvent(
+            type: "barometer_started",
+            payload: ["authorization": Self.describe(motionAuthorization: CMAltimeter.authorizationStatus())]
+        )
         altimeter.startRelativeAltitudeUpdates(
             to: sensorQueue,
             withHandler: Self.makeBarometerHandler(owner: self)
@@ -296,6 +367,8 @@ final class ARGeoTrackingViewModel: NSObject, ObservableObject {
         motionManager.stopGyroUpdates()
         motionManager.stopMagnetometerUpdates()
         altimeter.stopRelativeAltitudeUpdates()
+        isBarometerUpdating = false
+        isRequestingBarometerAuthorization = false
     }
 
     private func handleDeviceMotionSample(
@@ -677,11 +750,46 @@ private extension ARGeoTrackingViewModel {
             guard let owner else { return }
 
             if let error {
+                let nsError = error as NSError
                 let description = error.localizedDescription
+                let isNotAuthorizedError = nsError.domain == CMErrorDomain && nsError.code == 105
                 Task { @MainActor in
+                    owner.isBarometerUpdating = false
+
+                    if isNotAuthorizedError {
+                        let status = CMAltimeter.authorizationStatus()
+                        owner.logEvent(
+                            type: "barometer_error",
+                            payload: [
+                                "description": description,
+                                "code": nsError.code,
+                                "authorization": Self.describe(motionAuthorization: status)
+                            ]
+                        )
+
+                        switch status {
+                        case .notDetermined where !owner.hasRetriedBarometerStart:
+                            owner.hasRetriedBarometerStart = true
+                            owner.requestBarometerAuthorizationAndStart()
+                        case .denied:
+                            owner.barometerText = "Enable Motion & Fitness for barometer"
+                            owner.logStatus(force: true)
+                        case .restricted:
+                            owner.barometerText = "Enable Fitness Tracking in Settings"
+                            owner.logStatus(force: true)
+                        default:
+                            owner.barometerText = "Barometer not authorized"
+                            owner.logStatus(force: true)
+                        }
+                        return
+                    }
+
                     owner.barometerText = "Barometer error"
-                    owner.logEvent(type: "barometer_error", payload: ["description": description])
-                    owner.logStatus()
+                    owner.logEvent(
+                        type: "barometer_error",
+                        payload: ["description": description, "code": nsError.code]
+                    )
+                    owner.logStatus(force: true)
                 }
                 return
             }
@@ -770,6 +878,8 @@ private extension ARGeoTrackingViewModel {
             "gyro_available": motionManager.isGyroAvailable,
             "magnetometer_available": motionManager.isMagnetometerAvailable,
             "barometer_available": CMAltimeter.isRelativeAltitudeAvailable(),
+            "barometer_authorization": Self.describe(motionAuthorization: CMAltimeter.authorizationStatus()),
+            "motion_activity_authorization": Self.describe(motionAuthorization: CMMotionActivityManager.authorizationStatus()),
             "heading_available": CLLocationManager.headingAvailable(),
             "attitude_reference_frames_raw": CMMotionManager.availableAttitudeReferenceFrames().rawValue
         ]
@@ -852,6 +962,7 @@ private extension ARGeoTrackingViewModel {
             "attitude": attitudeText,
             "imu": imuText,
             "barometer": barometerText,
+            "barometer_authorization": Self.describe(motionAuthorization: CMAltimeter.authorizationStatus()),
             "accuracy": accuracyText,
             "motion": motionText,
             "roll_deg": rollDegrees,
@@ -923,6 +1034,21 @@ private extension ARGeoTrackingViewModel {
         case .xTrueNorthZVertical:
             return "xTrueNorthZVertical"
         default:
+            return "unknown"
+        }
+    }
+
+    nonisolated static func describe(motionAuthorization status: CMAuthorizationStatus) -> String {
+        switch status {
+        case .notDetermined:
+            return "not_determined"
+        case .restricted:
+            return "restricted"
+        case .denied:
+            return "denied"
+        case .authorized:
+            return "authorized"
+        @unknown default:
             return "unknown"
         }
     }
