@@ -7,11 +7,6 @@
 
 📱 A simple iPhone app for logging motion, location, and AR sensor data, then exporting it for analysis.
 
-<p align="center">
-  <img src="docs/images/indoor-example.png" alt="Indoor mapping example" width="420" />
-  <img src="docs/images/outdoor-example.png" alt="Outdoor logging example" width="420" />
-</p>
-
 This repo gives you two demos:
 
 - 🏠 `Indoor`: ARKit-based tracking, trajectory, and semantic mapping
@@ -83,6 +78,10 @@ Use `Indoor` when you want:
 - semantic mapping / mesh visualization
 - indoor AR logging workflows
 
+<p align="center">
+  <img src="docs/images/indoor-example.png" alt="Indoor mapping example" width="504" />
+</p>
+
 Typical flow:
 
 1. Open `Indoor`
@@ -99,6 +98,10 @@ Use `Outdoor` when you want:
 - device attitude
 - raw IMU streams
 - barometer / relative altitude
+
+<p align="center">
+  <img src="docs/images/outdoor-example.png" alt="Outdoor logging example" width="504" />
+</p>
 
 If the barometer says it needs permission, enable:
 
