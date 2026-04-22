@@ -96,10 +96,6 @@ def parse_args() -> argparse.Namespace:
         action="store_true",
         help="Spawn the Rerun viewer immediately.",
     )
-    parser.add_argument(
-        "--mapbox-token",
-        help="Optional Mapbox token for the embedded Rerun MapView. If omitted, MAPBOX_ACCESS_TOKEN is used.",
-    )
     return parser.parse_args()
 
 
@@ -247,6 +243,15 @@ def parse_barometer_csv(content: str) -> list[BarometerSample]:
 
 def log_series_static(path: str, names: list[str], colors: list[list[int]]) -> None:
     rr.log(path, rr.SeriesLines(names=names, colors=colors, widths=[2] * len(names)), static=True)
+
+
+def summarize_mapbox_token(token: str) -> str:
+    token = token.strip()
+    if not token:
+        return "<empty>"
+    if token.startswith("pk."):
+        return f"{token[:8]}...{token[-4:]} (len={len(token)})"
+    return f"{token[:8]}...{token[-4:]} (len={len(token)})"
 
 
 def set_sample_time(timestamp: str, start: datetime, sequence: int) -> None:
@@ -486,9 +491,18 @@ def main() -> None:
         raise ValueError("No Geo samples found in export")
 
     start = min(parse_timestamp(timestamp) for timestamp in candidate_timestamps)
-    mapbox_token = args.mapbox_token or os.environ.get("MAPBOX_ACCESS_TOKEN")
+    mapbox_token = os.environ.get("MAPBOX_ACCESS_TOKEN", "").strip()
+    token_source = "MAPBOX_ACCESS_TOKEN environment variable" if mapbox_token else "not provided"
     if mapbox_token:
         os.environ["RERUN_MAPBOX_ACCESS_TOKEN"] = mapbox_token
+        os.environ["MAPBOX_ACCESS_TOKEN"] = mapbox_token
+
+    print("[Outdoor] Loaded dataset", session_name)
+    print(f"[Mapbox] Source: {token_source}")
+    print(f"[Mapbox] Token present: {bool(mapbox_token)}")
+    print(f"[Mapbox] Token preview: {summarize_mapbox_token(mapbox_token)}")
+    print(f"[Mapbox] RERUN_MAPBOX_ACCESS_TOKEN set: {bool(os.environ.get('RERUN_MAPBOX_ACCESS_TOKEN'))}")
+    print(f"[Mapbox] Using Mapbox dark background: {bool(mapbox_token)}")
 
     rr.init(f"arkit_geo_log_{session_name}", spawn=args.spawn)
     if args.save:

@@ -209,7 +209,13 @@ If you want Mapbox-backed maps, use:
 export MAPBOX_ACCESS_TOKEN=your_mapbox_token
 ```
 
-The Outdoor Rerun script forwards `MAPBOX_ACCESS_TOKEN` internally to the Rerun viewer when needed.
+If your shell does not source your profile when launching the script, pass the token in the command invocation:
+
+```bash
+MAPBOX_ACCESS_TOKEN=your_mapbox_token python3 scripts/outdoor.py /path/to/geo-...json --spawn
+```
+
+The Outdoor Rerun script uses `MAPBOX_ACCESS_TOKEN` as the only token source and forwards it to the Rerun viewer when needed.
 
 See [.env.example](.env.example) for the expected variable name.
 
