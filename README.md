@@ -11,11 +11,13 @@ This repo gives you two demos:
 
 - 🏠 `Indoor`: ARKit-based tracking with a live semantic camera view, a followable 3D map, saved map points, and semantic mesh export on devices that support scene reconstruction
   <p align="center">
-    <img src="docs/images/indoor-example.png" alt="Indoor mapping example" width="504" />
+    <img src="docs/images/indoor-example.png" alt="Indoor app screenshot" width="360" />
+    <img src="docs/images/indoor-phone.png" alt="Indoor phone screen capture" width="360" />
   </p>
 - 🌤️ `Outdoor`: Core Location + Core Motion logging with a live map plus switchable charts for GPS, heading, attitude, accelerometer, gyroscope, magnetometer, and barometer
   <p align="center">
-    <img src="docs/images/outdoor-example.png" alt="Outdoor logging example" width="504" />
+    <img src="docs/images/outdoor-example.png" alt="Outdoor app screenshot" width="360" />
+    <img src="docs/images/outdoor-phone.png" alt="Outdoor phone screen capture" width="360" />
   </p>
 
 It also includes:
