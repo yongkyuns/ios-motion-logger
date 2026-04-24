@@ -3,8 +3,6 @@ import SceneKit
 import SwiftUI
 import simd
 
-private let maximumCameraOverlayFacesPerAnchor = 1200
-
 struct ARViewContainer: UIViewRepresentable {
     @ObservedObject var viewModel: ARTrackingViewModel
     let visibleSemanticClasses: Set<SemanticSurfaceClass>
@@ -91,7 +89,7 @@ struct ARViewContainer: UIViewRepresentable {
 
                 node.isHidden = !visibleSemanticClasses.contains(group.semanticClass)
 
-                let signature = signature(for: group.vertices)
+                let signature = signature(for: group)
                 guard overlaySignatureByKey[key] != signature else { continue }
 
                 node.geometry = makeGeometry(for: group)
@@ -109,12 +107,17 @@ struct ARViewContainer: UIViewRepresentable {
         private func makeGeometry(for group: SemanticMeshGroup) -> SCNGeometry {
             let vertices = group.vertices.map { SCNVector3($0.x, $0.y, $0.z) }
             let source = SCNGeometrySource(vertices: vertices)
-            let indices = Array(0..<group.vertices.count).map { UInt32($0) }
+            let indices: [UInt32]
+            if group.triangleIndices.isEmpty {
+                indices = Array(0..<group.vertices.count).map { UInt32($0) }
+            } else {
+                indices = group.triangleIndices.flatMap { [$0.x, $0.y, $0.z] }
+            }
             let data = indices.withUnsafeBufferPointer { Data(buffer: $0) }
             let element = SCNGeometryElement(
                 data: data,
                 primitiveType: .triangles,
-                primitiveCount: group.vertices.count / 3,
+                primitiveCount: indices.count / 3,
                 bytesPerIndex: MemoryLayout<UInt32>.size
             )
 
@@ -130,34 +133,53 @@ struct ARViewContainer: UIViewRepresentable {
         }
 
         private func makeSemanticGroups(from anchor: ARMeshAnchor) -> [SemanticMeshGroup] {
-            var verticesByClass: [SemanticSurfaceClass: [SIMD3<Float>]] = [:]
+            var accumulatorsByClass: [SemanticSurfaceClass: MeshAccumulator] = [:]
             let faceCount = anchor.geometry.faces.count
-            let faceStride = max(1, Int(ceil(Double(faceCount) / Double(maximumCameraOverlayFacesPerAnchor))))
+            let localVertices = anchor.geometry.localVertices()
 
-            for faceIndex in stride(from: 0, to: faceCount, by: faceStride) {
+            for faceIndex in 0..<faceCount {
                 let semanticClass = anchor.geometry.semanticClassOf(faceWithIndex: faceIndex)
                 let indices = anchor.geometry.vertexIndicesOf(faceWithIndex: faceIndex)
-                let localA = anchor.geometry.vertex(at: indices.0)
-                let localB = anchor.geometry.vertex(at: indices.1)
-                let localC = anchor.geometry.vertex(at: indices.2)
-                verticesByClass[semanticClass, default: []].append(contentsOf: [localA, localB, localC])
+                var accumulator = accumulatorsByClass[semanticClass, default: MeshAccumulator()]
+                let triangle = SIMD3(
+                    accumulator.index(for: indices.0, in: localVertices),
+                    accumulator.index(for: indices.1, in: localVertices),
+                    accumulator.index(for: indices.2, in: localVertices)
+                )
+                accumulator.triangleIndices.append(triangle)
+                accumulatorsByClass[semanticClass] = accumulator
             }
 
-            return verticesByClass
-                .map { SemanticMeshGroup(semanticClass: $0.key, vertices: $0.value) }
+            return accumulatorsByClass
+                .map { semanticClass, accumulator in
+                    return SemanticMeshGroup(
+                        semanticClass: semanticClass,
+                        vertices: accumulator.vertices,
+                        triangleIndices: accumulator.triangleIndices
+                    )
+                }
                 .sorted { $0.semanticClass.rawValue < $1.semanticClass.rawValue }
         }
 
-        private func signature(for vertices: [SIMD3<Float>]) -> Int {
+        private func signature(for group: SemanticMeshGroup) -> Int {
             var hasher = Hasher()
-            hasher.combine(vertices.count)
+            hasher.combine(group.vertices.count)
+            hasher.combine(group.triangleIndices.count)
 
-            let sampleStride = max(1, vertices.count / 12)
-            for index in stride(from: 0, to: vertices.count, by: sampleStride) {
-                let vertex = vertices[index]
+            let sampleStride = max(1, group.vertices.count / 12)
+            for index in stride(from: 0, to: group.vertices.count, by: sampleStride) {
+                let vertex = group.vertices[index]
                 hasher.combine(vertex.x.bitPattern)
                 hasher.combine(vertex.y.bitPattern)
                 hasher.combine(vertex.z.bitPattern)
+            }
+
+            let triangleSampleStride = max(1, group.triangleIndices.count / 12)
+            for index in stride(from: 0, to: group.triangleIndices.count, by: triangleSampleStride) {
+                let triangle = group.triangleIndices[index]
+                hasher.combine(triangle.x)
+                hasher.combine(triangle.y)
+                hasher.combine(triangle.z)
             }
 
             return hasher.finalize()
@@ -166,6 +188,12 @@ struct ARViewContainer: UIViewRepresentable {
 }
 
 private extension ARMeshGeometry {
+    func localVertices() -> [SIMD3<Float>] {
+        (0..<vertices.count).map { index in
+            vertex(at: UInt32(index))
+        }
+    }
+
     func vertex(at index: UInt32) -> SIMD3<Float> {
         let offset = vertices.offset + vertices.stride * Int(index)
         let pointer = vertices.buffer.contents().advanced(by: offset)
@@ -187,7 +215,7 @@ private extension ARMeshGeometry {
     }
 
     func semanticClassOf(faceWithIndex index: Int) -> SemanticSurfaceClass {
-        guard let classification else { return .none }
+        guard let classification else { return .geometry }
         let offset = classification.offset + (classification.stride * index)
         let pointer = classification.buffer.contents().advanced(by: offset)
         let value = Int(pointer.assumingMemoryBound(to: UInt8.self).pointee)
@@ -201,8 +229,27 @@ private extension ARMeshGeometry {
         case .seat: return .seat
         case .window: return .window
         case .door: return .door
-        case .none: return .none
-        @unknown default: return .none
+        case .none: return .geometry
+        @unknown default: return .geometry
+        }
+    }
+}
+
+private extension ARViewContainer.Coordinator {
+    struct MeshAccumulator {
+        var vertices: [SIMD3<Float>] = []
+        var triangleIndices: [SIMD3<UInt32>] = []
+        var remappedIndicesByOriginalIndex: [UInt32: UInt32] = [:]
+
+        mutating func index(for originalIndex: UInt32, in sourceVertices: [SIMD3<Float>]) -> UInt32 {
+            if let remapped = remappedIndicesByOriginalIndex[originalIndex] {
+                return remapped
+            }
+
+            let newIndex = UInt32(vertices.count)
+            vertices.append(sourceVertices[Int(originalIndex)])
+            remappedIndicesByOriginalIndex[originalIndex] = newIndex
+            return newIndex
         }
     }
 }

@@ -3,6 +3,7 @@ import UIKit
 import simd
 
 enum SemanticSurfaceClass: String, CaseIterable, Hashable, Identifiable, Sendable {
+    case geometry
     case floor
     case wall
     case ceiling
@@ -16,6 +17,7 @@ enum SemanticSurfaceClass: String, CaseIterable, Hashable, Identifiable, Sendabl
 
     var title: String {
         switch self {
+        case .geometry: return "Geometry"
         case .floor: return "Floor"
         case .wall: return "Wall"
         case .ceiling: return "Ceiling"
@@ -29,6 +31,7 @@ enum SemanticSurfaceClass: String, CaseIterable, Hashable, Identifiable, Sendabl
 
     var uiColor: UIColor {
         switch self {
+        case .geometry: return UIColor.systemGray2
         case .floor: return UIColor.systemGreen
         case .wall: return UIColor.systemBlue
         case .ceiling: return UIColor.systemOrange
@@ -52,6 +55,7 @@ enum SemanticSurfaceClass: String, CaseIterable, Hashable, Identifiable, Sendabl
 struct SemanticMeshGroup: Sendable {
     let semanticClass: SemanticSurfaceClass
     let vertices: [SIMD3<Float>]
+    let triangleIndices: [SIMD3<UInt32>]
 }
 
 struct SemanticMeshChunk: Identifiable, Sendable {

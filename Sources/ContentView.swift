@@ -145,6 +145,14 @@ private struct WorldTrackingDemoView: View {
                             .buttonStyle(.borderedProminent)
                             .controlSize(.small)
 
+                            if viewModel.supportsSceneMeshLogging {
+                                Button(viewModel.meshLoggingEnabled ? "Mesh Log On" : "Mesh Log Off") {
+                                    viewModel.toggleMeshLogging()
+                                }
+                                .buttonStyle(.borderedProminent)
+                                .controlSize(.small)
+                            }
+
                             Button("Export Logs") {
                                 guard !isPreparingExport else { return }
                                 isPreparingExport = true

@@ -3,8 +3,6 @@ import Combine
 import Foundation
 import simd
 
-private let maximumRenderedSemanticFacesPerChunk = 1800
-
 @MainActor
 final class ARTrackingViewModel: NSObject, ObservableObject, ARSessionDelegate {
     private let minimumSampleDistance: Float = 0.05
@@ -31,6 +29,8 @@ final class ARTrackingViewModel: NSObject, ObservableObject, ARSessionDelegate {
     @Published private(set) var mapFeaturePoints: [SIMD3<Float>] = []
     @Published private(set) var semanticMeshChunks: [SemanticMeshChunk] = []
     @Published private(set) var semanticStatusText = "Semantic mesh unavailable"
+    @Published private(set) var supportsSceneMeshLogging = false
+    @Published private(set) var meshLoggingEnabled = false
     @Published private(set) var currentCameraPosition: SIMD3<Float>?
     @Published private(set) var currentCameraYawRadians: Float = 0
 
@@ -38,7 +38,8 @@ final class ARTrackingViewModel: NSObject, ObservableObject, ARSessionDelegate {
     private var lastTrajectoryPosition: SIMD3<Float>?
     private var totalTrajectoryDistance: Float = 0
     private var featurePointKeys: Set<Int64> = []
-    private var semanticChunkByID: [UUID: SemanticMeshChunk] = [:]
+    private var liveSemanticChunkByID: [UUID: SemanticMeshChunk] = [:]
+    private var loggedSemanticChunkByID: [UUID: SemanticMeshChunk] = [:]
     private var semanticPublishTask: Task<Void, Never>?
     private var lastSemanticPublishTime: TimeInterval = 0
     private var lastPoseLogTime: TimeInterval = 0
@@ -67,6 +68,23 @@ final class ARTrackingViewModel: NSObject, ObservableObject, ARSessionDelegate {
         return await logWriter.makeArchive()
     }
 
+    func toggleMeshLogging() {
+        guard supportsSceneMeshLogging else { return }
+        meshLoggingEnabled.toggle()
+
+        if meshLoggingEnabled {
+            loggedSemanticChunkByID = liveSemanticChunkByID
+        } else {
+            loggedSemanticChunkByID.removeAll(keepingCapacity: true)
+        }
+
+        updateSemanticStatusText()
+        logEvent(
+            type: "mesh_logging_toggled",
+            payload: ["enabled": meshLoggingEnabled]
+        )
+    }
+
     func attachSession(_ session: ARSession) {
         self.session = session
 
@@ -93,15 +111,18 @@ final class ARTrackingViewModel: NSObject, ObservableObject, ARSessionDelegate {
         configuration.worldAlignment = .gravity
         configuration.planeDetection = [.horizontal, .vertical]
         configuration.environmentTexturing = .none
-        if ARWorldTrackingConfiguration.supportsSceneReconstruction(.meshWithClassification) {
+        let supportsClassifiedMesh = ARWorldTrackingConfiguration.supportsSceneReconstruction(.meshWithClassification)
+        let supportsMesh = supportsClassifiedMesh || ARWorldTrackingConfiguration.supportsSceneReconstruction(.mesh)
+        supportsSceneMeshLogging = supportsMesh
+
+        if supportsClassifiedMesh {
             configuration.sceneReconstruction = .meshWithClassification
-            semanticStatusText = "Semantic mesh on"
-        } else if ARWorldTrackingConfiguration.supportsSceneReconstruction(.mesh) {
+        } else if supportsMesh {
             configuration.sceneReconstruction = .mesh
-            semanticStatusText = "Mesh on, semantics unavailable"
         } else {
-            semanticStatusText = "Semantic mesh unavailable"
+            meshLoggingEnabled = false
         }
+        updateSemanticStatusText()
 
         var options: ARSession.RunOptions = []
         if resetTracking {
@@ -279,12 +300,14 @@ final class ARTrackingViewModel: NSObject, ObservableObject, ARSessionDelegate {
         mapFeaturePoints = []
         featurePointKeys.removeAll(keepingCapacity: true)
         semanticMeshChunks = []
-        semanticChunkByID.removeAll(keepingCapacity: true)
+        liveSemanticChunkByID.removeAll(keepingCapacity: true)
+        loggedSemanticChunkByID.removeAll(keepingCapacity: true)
         trajectoryDistanceText = "0.00 m"
         trajectorySampleCountText = "0"
         currentCameraPosition = nil
         currentCameraYawRadians = 0
         lastPoseLogTime = 0
+        updateSemanticStatusText()
     }
 
     deinit {
@@ -377,14 +400,18 @@ final class ARTrackingViewModel: NSObject, ObservableObject, ARSessionDelegate {
 
     private func upsertSemanticChunks(_ chunks: [SemanticMeshChunk]) {
         for chunk in chunks {
-            semanticChunkByID[chunk.id] = chunk
+            liveSemanticChunkByID[chunk.id] = chunk
+            if meshLoggingEnabled {
+                loggedSemanticChunkByID[chunk.id] = chunk
+            }
         }
         scheduleSemanticMeshPublish()
     }
 
     private func removeSemanticChunks(ids: [UUID]) {
         for id in ids {
-            semanticChunkByID.removeValue(forKey: id)
+            liveSemanticChunkByID.removeValue(forKey: id)
+            loggedSemanticChunkByID.removeValue(forKey: id)
         }
         scheduleSemanticMeshPublish(force: true)
     }
@@ -413,14 +440,26 @@ final class ARTrackingViewModel: NSObject, ObservableObject, ARSessionDelegate {
     private func publishSemanticMeshSnapshot() {
         semanticPublishTask = nil
         lastSemanticPublishTime = ProcessInfo.processInfo.systemUptime
-        semanticMeshChunks = semanticChunkByID.values.sorted { $0.id.uuidString < $1.id.uuidString }
+        semanticMeshChunks = liveSemanticChunkByID.values.sorted { $0.id.uuidString < $1.id.uuidString }
+        updateSemanticStatusText()
+    }
 
-        let classifiedFaces = semanticMeshChunks
+    private func updateSemanticStatusText() {
+        guard supportsSceneMeshLogging else {
+            semanticStatusText = "Semantic mesh unavailable"
+            return
+        }
+
+        let faceCount = semanticMeshChunks
             .flatMap(\.groups)
-            .filter { $0.semanticClass != .none }
-            .reduce(0) { $0 + ($1.vertices.count / 3) }
+            .reduce(0) { $0 + $1.triangleIndices.count }
 
-        semanticStatusText = semanticMeshChunks.isEmpty ? "Semantic mesh on" : "Semantic faces \(classifiedFaces)"
+        if semanticMeshChunks.isEmpty {
+            semanticStatusText = meshLoggingEnabled ? "Room mesh on, logging on" : "Room mesh on, logging off"
+        } else {
+            let loggingState = meshLoggingEnabled ? "logging on" : "logging off"
+            semanticStatusText = "Mesh faces \(faceCount), \(loggingState)"
+        }
     }
 
     private func logPoseSample(
@@ -446,7 +485,7 @@ final class ARTrackingViewModel: NSObject, ObservableObject, ARSessionDelegate {
             Self.csvField(mappingStateText),
             featureCount,
             mapFeaturePoints.count,
-            semanticMeshChunks.count
+            loggedSemanticChunkByID.count
         )
 
         Task {
@@ -469,14 +508,20 @@ final class ARTrackingViewModel: NSObject, ObservableObject, ARSessionDelegate {
     }
 
     private func writeFinalSemanticMeshSnapshot() async {
+        guard meshLoggingEnabled else {
+            await logWriter.overwrite(lines: [], to: semanticMeshLogFileName)
+            return
+        }
+
         let timestamp = makeLogTimestamp()
         let uptime = ProcessInfo.processInfo.systemUptime
-        let chunks = semanticChunkByID.values.sorted { $0.id.uuidString < $1.id.uuidString }
+        let chunks = loggedSemanticChunkByID.values.sorted { $0.id.uuidString < $1.id.uuidString }
         let lines = chunks.compactMap { chunk -> String? in
             let groups = chunk.groups.map { group in
                 [
                     "semantic_class": group.semanticClass.rawValue,
-                    "vertices": group.vertices.map(Self.serialize(vertex:))
+                    "vertices": group.vertices.map(Self.serialize(vertex:)),
+                    "triangle_indices": group.triangleIndices.map(Self.serialize(triangle:))
                 ]
             }
 
@@ -508,26 +553,36 @@ final class ARTrackingViewModel: NSObject, ObservableObject, ARSessionDelegate {
         [vertex.x, vertex.y, vertex.z]
     }
 
-    nonisolated private static func makeSemanticMeshChunk(from anchor: ARMeshAnchor) -> SemanticMeshChunk {
-        var verticesByClass: [SemanticSurfaceClass: [SIMD3<Float>]] = [:]
-        let faceCount = anchor.geometry.faces.count
-        let faceStride = max(1, Int(ceil(Double(faceCount) / Double(maximumRenderedSemanticFacesPerChunk))))
+    nonisolated private static func serialize(triangle: SIMD3<UInt32>) -> [UInt32] {
+        [triangle.x, triangle.y, triangle.z]
+    }
 
-        for faceIndex in stride(from: 0, to: faceCount, by: faceStride) {
+    nonisolated private static func makeSemanticMeshChunk(from anchor: ARMeshAnchor) -> SemanticMeshChunk {
+        var accumulatorsByClass: [SemanticSurfaceClass: MeshAccumulator] = [:]
+        let faceCount = anchor.geometry.faces.count
+        let worldVertices = anchor.geometry.worldVertices(transformedBy: anchor.transform)
+
+        for faceIndex in 0..<faceCount {
             let semanticClass = anchor.geometry.semanticClassOf(faceWithIndex: faceIndex)
             let indices = anchor.geometry.vertexIndicesOf(faceWithIndex: faceIndex)
-            let localA = anchor.geometry.vertex(at: indices.0)
-            let localB = anchor.geometry.vertex(at: indices.1)
-            let localC = anchor.geometry.vertex(at: indices.2)
-            let worldA = (anchor.transform * SIMD4(localA.x, localA.y, localA.z, 1)).xyz
-            let worldB = (anchor.transform * SIMD4(localB.x, localB.y, localB.z, 1)).xyz
-            let worldC = (anchor.transform * SIMD4(localC.x, localC.y, localC.z, 1)).xyz
-
-            verticesByClass[semanticClass, default: []].append(contentsOf: [worldA, worldB, worldC])
+            var accumulator = accumulatorsByClass[semanticClass, default: MeshAccumulator()]
+            let triangle = SIMD3(
+                accumulator.index(for: indices.0, in: worldVertices),
+                accumulator.index(for: indices.1, in: worldVertices),
+                accumulator.index(for: indices.2, in: worldVertices)
+            )
+            accumulator.triangleIndices.append(triangle)
+            accumulatorsByClass[semanticClass] = accumulator
         }
 
-        let groups = verticesByClass
-            .map { SemanticMeshGroup(semanticClass: $0.key, vertices: $0.value) }
+        let groups = accumulatorsByClass
+            .map {
+                SemanticMeshGroup(
+                    semanticClass: $0.key,
+                    vertices: $0.value.vertices,
+                    triangleIndices: $0.value.triangleIndices
+                )
+            }
             .sorted { $0.semanticClass.rawValue < $1.semanticClass.rawValue }
 
         return SemanticMeshChunk(id: anchor.identifier, groups: groups)
@@ -560,6 +615,13 @@ private extension SIMD4<Float> {
 }
 
 private extension ARMeshGeometry {
+    func worldVertices(transformedBy transform: simd_float4x4) -> [SIMD3<Float>] {
+        (0..<vertices.count).map { index in
+            let local = vertex(at: UInt32(index))
+            return (transform * SIMD4(local.x, local.y, local.z, 1)).xyz
+        }
+    }
+
     func vertex(at index: UInt32) -> SIMD3<Float> {
         let offset = vertices.offset + vertices.stride * Int(index)
         let pointer = vertices.buffer.contents().advanced(by: offset)
@@ -581,7 +643,7 @@ private extension ARMeshGeometry {
     }
 
     func semanticClassOf(faceWithIndex index: Int) -> SemanticSurfaceClass {
-        guard let classification else { return .none }
+        guard let classification else { return .geometry }
         let offset = classification.offset + (classification.stride * index)
         let pointer = classification.buffer.contents().advanced(by: offset)
         let value = Int(pointer.assumingMemoryBound(to: UInt8.self).pointee)
@@ -595,8 +657,27 @@ private extension ARMeshGeometry {
         case .seat: return .seat
         case .window: return .window
         case .door: return .door
-        case .none: return .none
-        @unknown default: return .none
+        case .none: return .geometry
+        @unknown default: return .geometry
+        }
+    }
+}
+
+private extension ARTrackingViewModel {
+    struct MeshAccumulator {
+        var vertices: [SIMD3<Float>] = []
+        var triangleIndices: [SIMD3<UInt32>] = []
+        var remappedIndicesByOriginalIndex: [UInt32: UInt32] = [:]
+
+        mutating func index(for originalIndex: UInt32, in sourceVertices: [SIMD3<Float>]) -> UInt32 {
+            if let remapped = remappedIndicesByOriginalIndex[originalIndex] {
+                return remapped
+            }
+
+            let newIndex = UInt32(vertices.count)
+            vertices.append(sourceVertices[Int(originalIndex)])
+            remappedIndicesByOriginalIndex[originalIndex] = newIndex
+            return newIndex
         }
     }
 }

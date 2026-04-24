@@ -218,7 +218,7 @@ struct ThreeDMapView: UIViewRepresentable {
                     let key = SemanticMeshKey(chunkID: chunk.id, semanticClass: group.semanticClass)
                     liveKeys.insert(key)
 
-                    let signature = signature(for: group.vertices)
+                    let signature = signature(for: group)
                     let node = semanticNodesByKey[key] ?? {
                         let node = SCNNode()
                         semanticMeshNode.addChildNode(node)
@@ -264,12 +264,17 @@ struct ThreeDMapView: UIViewRepresentable {
         private func makeSemanticGeometry(for group: SemanticMeshGroup) -> SCNGeometry {
             let vertices = group.vertices.map { SCNVector3($0.x, $0.y, $0.z) }
             let source = SCNGeometrySource(vertices: vertices)
-            let indices = Array(0..<group.vertices.count).map { UInt32($0) }
+            let indices: [UInt32]
+            if group.triangleIndices.isEmpty {
+                indices = Array(0..<group.vertices.count).map { UInt32($0) }
+            } else {
+                indices = group.triangleIndices.flatMap { [$0.x, $0.y, $0.z] }
+            }
             let data = indices.withUnsafeBufferPointer { Data(buffer: $0) }
             let element = SCNGeometryElement(
                 data: data,
                 primitiveType: .triangles,
-                primitiveCount: group.vertices.count / 3,
+                primitiveCount: indices.count / 3,
                 bytesPerIndex: MemoryLayout<UInt32>.size
             )
 
@@ -310,20 +315,31 @@ struct ThreeDMapView: UIViewRepresentable {
             return container
         }
 
-        private func signature(for vertices: [SIMD3<Float>]) -> Int {
+        private func signature(for group: SemanticMeshGroup) -> Int {
             var hasher = Hasher()
-            hasher.combine(vertices.count)
+            hasher.combine(group.vertices.count)
+            hasher.combine(group.triangleIndices.count)
 
-            guard !vertices.isEmpty else {
+            guard !group.vertices.isEmpty else {
                 return hasher.finalize()
             }
 
-            let sampleStride = max(1, vertices.count / 12)
-            for index in stride(from: 0, to: vertices.count, by: sampleStride) {
-                let vertex = vertices[index]
+            let vertexSampleStride = max(1, group.vertices.count / 12)
+            for index in stride(from: 0, to: group.vertices.count, by: vertexSampleStride) {
+                let vertex = group.vertices[index]
                 hasher.combine(vertex.x.bitPattern)
                 hasher.combine(vertex.y.bitPattern)
                 hasher.combine(vertex.z.bitPattern)
+            }
+
+            if !group.triangleIndices.isEmpty {
+                let triangleSampleStride = max(1, group.triangleIndices.count / 12)
+                for index in stride(from: 0, to: group.triangleIndices.count, by: triangleSampleStride) {
+                    let triangle = group.triangleIndices[index]
+                    hasher.combine(triangle.x)
+                    hasher.combine(triangle.y)
+                    hasher.combine(triangle.z)
+                }
             }
 
             return hasher.finalize()

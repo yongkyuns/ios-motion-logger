@@ -3,7 +3,7 @@
 	archiveVersion = 1;
 	classes = {
 	};
-	objectVersion = 77;
+	objectVersion = 63;
 	objects = {
 
 /* Begin PBXBuildFile section */
@@ -30,7 +30,7 @@
 		622752BBFA1A1A1BA62ED5A3 /* IOSMotionLoggerApp.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = IOSMotionLoggerApp.swift; sourceTree = "<group>"; };
 		707717E8E0D79D1CE1A9931E /* ActivityViewController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ActivityViewController.swift; sourceTree = "<group>"; };
 		7677751E6C8E89227B533DC2 /* ThreeDMapView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ThreeDMapView.swift; sourceTree = "<group>"; };
-		7B2F52F6BB2D451E29282251 /* IOSMotionLogger.app */ = {isa = PBXFileReference; includeInIndex = 0; lastKnownFileType = wrapper.application; path = IOSMotionLogger.app; sourceTree = BUILT_PRODUCTS_DIR; };
+		7B2F52F6BB2D451E29282251 /* iOS Motion Logger.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = "iOS Motion Logger.app"; sourceTree = BUILT_PRODUCTS_DIR; };
 		9C5E69A2D765FDE15841BB1C /* GeoTraceMapView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = GeoTraceMapView.swift; sourceTree = "<group>"; };
 		AAC2C7BD9731970944F89013 /* ARGeoTrackingViewModel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ARGeoTrackingViewModel.swift; sourceTree = "<group>"; };
 		BF5F9F5270142D73EB2FF4F4 /* ARTrackingViewModel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ARTrackingViewModel.swift; sourceTree = "<group>"; };
@@ -71,7 +71,7 @@
 		B65009B65AF59F4A7CF3DDC7 /* Products */ = {
 			isa = PBXGroup;
 			children = (
-				7B2F52F6BB2D451E29282251 /* IOSMotionLogger.app */,
+				7B2F52F6BB2D451E29282251 /* iOS Motion Logger.app */,
 			);
 			name = Products;
 			sourceTree = "<group>";
@@ -93,7 +93,7 @@
 			packageProductDependencies = (
 			);
 			productName = IOSMotionLogger;
-			productReference = 7B2F52F6BB2D451E29282251 /* IOSMotionLogger.app */;
+			productReference = 7B2F52F6BB2D451E29282251 /* iOS Motion Logger.app */;
 			productType = "com.apple.product-type.application";
 		};
 /* End PBXNativeTarget section */
@@ -120,7 +120,6 @@
 			);
 			mainGroup = 6C1FFCB7A9BC001F1D81BA0A;
 			minimizedProjectReferenceProxies = 1;
-			preferredProjectObjectVersion = 77;
 			projectDirPath = "";
 			projectRoot = "";
 			targets = (
@@ -276,6 +275,7 @@
 				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
 				CODE_SIGN_IDENTITY = "iPhone Developer";
 				CODE_SIGN_STYLE = Automatic;
+				DEVELOPMENT_TEAM = WWT2Q26LY9;
 				GENERATE_INFOPLIST_FILE = YES;
 				INFOPLIST_FILE = Info.plist;
 				INFOPLIST_KEY_LSApplicationCategoryType = "public.app-category.developer-tools";
@@ -305,6 +305,7 @@
 				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
 				CODE_SIGN_IDENTITY = "iPhone Developer";
 				CODE_SIGN_STYLE = Automatic;
+				DEVELOPMENT_TEAM = WWT2Q26LY9;
 				GENERATE_INFOPLIST_FILE = YES;
 				INFOPLIST_FILE = Info.plist;
 				INFOPLIST_KEY_LSApplicationCategoryType = "public.app-category.developer-tools";

@@ -12,6 +12,7 @@ from pathlib import Path
 from typing import Any
 
 import rerun as rr
+import rerun.blueprint as rrb
 
 
 @dataclass
@@ -40,6 +41,7 @@ class WorldMapPointSample:
 class SemanticMeshGroupSample:
     semantic_class: str
     vertices: list[tuple[float, float, float]]
+    triangle_indices: list[tuple[int, int, int]] | None = None
 
 
 @dataclass
@@ -174,6 +176,16 @@ def parse_semantic_mesh_jsonl(content: str) -> list[SemanticMeshEvent]:
     for row in rows:
         groups: list[SemanticMeshGroupSample] = []
         for group in row.get("groups", []):
+            raw_indices = group.get("triangle_indices") or group.get("indices") or group.get("triangles")
+            indices: list[tuple[int, int, int]] | None = None
+            if raw_indices:
+                indices = [
+                    (int(i0), int(i1), int(i2))
+                    for i0, i1, i2 in (
+                        (i[0], i[1], i[2]) for i in raw_indices if len(i) == 3
+                    )
+                ]
+
             vertices = [
                 (float(vertex[0]), float(vertex[1]), float(vertex[2]))
                 for vertex in group.get("vertices", [])
@@ -183,6 +195,7 @@ def parse_semantic_mesh_jsonl(content: str) -> list[SemanticMeshEvent]:
                 SemanticMeshGroupSample(
                     semantic_class=str(group.get("semantic_class", "none")),
                     vertices=vertices,
+                    triangle_indices=indices,
                 )
             )
 
@@ -237,6 +250,25 @@ def log_static_scene() -> None:
     )
 
 
+def send_blueprint() -> None:
+    rr.send_blueprint(
+        rrb.Blueprint(
+            rrb.Spatial3DView(
+                origin="/",
+                contents=[
+                    "/world/device/**",
+                    "/world/trajectory",
+                    "/world/meshes/**",
+                    "/world/point_clouds/**",
+                ],
+                name="Indoor 3D",
+                line_grid=True,
+            ),
+            collapse_panels=True,
+        )
+    )
+
+
 def log_events(events: list[dict[str, Any]], first_uptime_seconds: float) -> None:
     for index, event in enumerate(events):
         rr.set_time("event", sequence=index)
@@ -254,45 +286,104 @@ def semantic_color_rgb(semantic_class: str) -> list[int]:
         "seat": [255, 45, 85],
         "window": [90, 200, 250],
         "door": [162, 132, 94],
+        "geometry": [140, 140, 145],
         "none": [142, 142, 147],
     }.get(semantic_class, [142, 142, 147])
+
+
+def semantic_color_rgba(semantic_class: str, alpha: int) -> list[int]:
+    rgb = semantic_color_rgb(semantic_class)
+    return [rgb[0], rgb[1], rgb[2], alpha]
 
 
 def log_map_points(map_points: list[WorldMapPointSample]) -> None:
     cumulative_points: list[tuple[float, float, float]] = []
 
-    for sample in map_points:
+    for frame_index, sample in enumerate(map_points):
+        rr.set_time("frame", sequence=frame_index)
         cumulative_points.append(sample.position)
         rr.set_time("uptime", duration=sample.uptime_seconds)
         rr.log(
-            "world/map_points",
-            rr.Points3D(cumulative_points, colors=[[200, 200, 200]], radii=[0.008]),
+            "world/point_clouds/arkit_features",
+            rr.Points3D(cumulative_points, colors=[[200, 200, 200]], radii=[0.005]),
         )
 
 
 def log_semantic_mesh_events(events: list[SemanticMeshEvent]) -> None:
+    all_vertices: list[tuple[float, float, float]] = []
+    all_triangle_indices: list[tuple[int, int, int]] = []
+    all_mesh_vertex_colors: list[list[int]] = []
+    all_point_vertex_colors: list[list[int]] = []
+    vertex_offset = 0
+
     for event in events:
-        rr.set_time("uptime", duration=event.uptime_seconds)
-        chunk_path = f"world/semantic_mesh/{event.chunk_id}"
+        mesh_chunk_path = f"world/meshes/semantic_mesh/{event.chunk_id}"
+        point_chunk_path = f"world/point_clouds/semantic_mesh/{event.chunk_id}"
 
         if event.event_type == "remove_chunk":
-            rr.log(chunk_path, rr.Clear(recursive=True))
+            rr.log(mesh_chunk_path, rr.Clear(recursive=True))
+            rr.log(point_chunk_path, rr.Clear(recursive=True))
             continue
 
-        rr.log(chunk_path, rr.Clear(recursive=True))
+        rr.log(mesh_chunk_path, rr.Clear(recursive=True))
+        rr.log(point_chunk_path, rr.Clear(recursive=True))
 
         for group in event.groups:
             if not group.vertices:
                 continue
 
+            mesh_color = semantic_color_rgba(group.semantic_class, alpha=255)
+            point_color = semantic_color_rgba(group.semantic_class, alpha=220)
+            if group.triangle_indices:
+                rr.log(
+                    f"{mesh_chunk_path}/{group.semantic_class}",
+                    rr.Mesh3D(
+                        vertex_positions=group.vertices,
+                        triangle_indices=group.triangle_indices,
+                        vertex_colors=[mesh_color] * len(group.vertices),
+                        albedo_factor=[255, 255, 255, 88],
+                    ),
+                    static=True,
+                )
+                all_triangle_indices.extend(
+                    [
+                        (i0 + vertex_offset, i1 + vertex_offset, i2 + vertex_offset)
+                        for i0, i1, i2 in group.triangle_indices
+                    ]
+                )
+
             rr.log(
-                f"{chunk_path}/{group.semantic_class}",
-                rr.Points3D(
-                    group.vertices,
-                    colors=[semantic_color_rgb(group.semantic_class)],
-                    radii=[0.004],
-                ),
+                f"{point_chunk_path}/{group.semantic_class}",
+                rr.Points3D(group.vertices, colors=[point_color] * len(group.vertices), radii=[0.006]),
+                static=True,
             )
+
+            all_vertices.extend(group.vertices)
+            all_mesh_vertex_colors.extend([mesh_color] * len(group.vertices))
+            all_point_vertex_colors.extend([point_color] * len(group.vertices))
+            vertex_offset += len(group.vertices)
+
+    if all_vertices:
+        if all_triangle_indices:
+            rr.log(
+                "world/meshes/semantic_mesh/combined",
+                rr.Mesh3D(
+                    vertex_positions=all_vertices,
+                    triangle_indices=all_triangle_indices,
+                    vertex_colors=all_mesh_vertex_colors,
+                    albedo_factor=[255, 255, 255, 88],
+                ),
+                static=True,
+            )
+        rr.log(
+            "world/point_clouds/semantic_mesh/combined",
+            rr.Points3D(
+                all_vertices,
+                colors=all_point_vertex_colors,
+                radii=[0.007],
+            ),
+            static=True,
+        )
 
 
 def log_poses(poses: list[WorldPoseSample]) -> None:
@@ -346,6 +437,7 @@ def main() -> None:
     if args.save:
         rr.save(args.save)
 
+    send_blueprint()
     log_static_scene()
     log_events(events, poses[0].uptime_seconds)
     log_map_points(map_points)
