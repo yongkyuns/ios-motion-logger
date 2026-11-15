@@ -1,0 +1,30 @@
+# Opt-in only: do not enqueue existing PRs without an explicit label.
+# Keep existing GitHub branch protection and all reported CI failures blocking.
+merge_queue:
+  mode: serial
+  max_parallel_checks: 2
+  status_comments: outcomes
+
+queue_rules:
+  - name: main
+    merge_method: merge
+    batch_size: 2
+    queue_conditions:
+      - base = main
+      - -draft
+      - label = merge-train
+      - check-success = @github-actions/build-and-visualize
+    merge_conditions:
+      - check-success = @github-actions/build-and-visualize
+      - "-check-failure *= @github-actions/**"
+      - "-check-pending *= @github-actions/**"
+
+pull_request_rules:
+  - name: Queue explicitly opted-in main PRs
+    conditions:
+      - base = main
+      - -draft
+      - label = merge-train
+    actions:
+      queue:
+        name: main
